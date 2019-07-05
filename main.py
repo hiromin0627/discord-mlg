@@ -38,7 +38,7 @@ pickup = list()
 
 @client.event
 async def on_ready():
-    print('---MilliShita Gacha v1.0.0---')
+    print('---MilliShita Gacha 1.0.0 Alpha---')
     print('discord.py ver:' + discord.__version__)
     print('Logged in as ' + client.user.name + '(ID:' + str(client.user.id) + ')')
     print('Bot created by @hiromin0627')
