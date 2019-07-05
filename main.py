@@ -176,15 +176,20 @@ async def on_message(message):
                         return
                 return
     elif message.content.startswith(prefix + "ガシャ"):
+        kind = ''
+        result = []
+        img = ''
+        author = message.author
+        
         channel = client.get_channel(vc_id)
         
         gacha_count = int()
 
         try:
-            with open('./gacha_count/' + str(message.author.id) + '.txt', 'r') as f:
+            with open('./gacha_count/' + str(author.id) + '.txt', 'r') as f:
                 gacha_count = int(f.read())
         except:
-            with open('./gacha_count/' + str(message.author.id) + '.txt', 'w') as f:
+            with open('./gacha_count/' + str(author.id) + '.txt', 'w') as f:
                 f.write('0')
 
         if gacha_count >= 300:
@@ -208,7 +213,7 @@ async def on_message(message):
                 pickup_counter += 1
 
             emb = discord.Embed(title='交換カード一覧', description=name)
-            emb.set_author(name=message.author.name, icon_url=message.author.avatar_url)
+            emb.set_author(name=author.name, icon_url=author.avatar_url)
             emb.set_footer(text=pickup_name)
             msgs = await message.channel.send('ドリームスターがカード交換数に達しているため、ガシャをご利用いただけません。カードを交換してください。\n該当番号のリアクションを返すと交換できます。', embed=emb)
 
@@ -218,7 +223,7 @@ async def on_message(message):
             kind = 'ドリームスター交換「' + pickup_name + '」'
             try:
                 gacha_count = 0
-                with open('./gacha_count/' + str(message.author.id) + '.txt', 'w') as f:
+                with open('./gacha_count/' + str(author.id) + '.txt', 'w') as f:
                     f.write(str(gacha_count))
             except:
                 print('ガシャ回数の記録ができませんでした。')
@@ -258,14 +263,6 @@ async def on_message(message):
                         pickup_num = 9
                         break
 
-            if 'SILENT' in message.content.upper() or 'サイレント' in message.content:
-                flag = 1
-            else:
-                flag = 0
-                if not bgm_id == 0:
-                    toBot = client.get_channel(bgm_id)
-                    await toBot.send('MLgacha')
-
             result = pickup_alllist[pickup_num]
 
             if result[5] >= 2:
@@ -277,43 +274,47 @@ async def on_message(message):
 
             await msgs.delete()
 
-            vc = await channel.connect()
-            print('Start MLChange[' + kind + '] by ' + str(message.author.id) + '.')
+            print('Start MLChange[' + kind + '] by ' + str(author.id) + '.')
+
+            if not 'SILENT' in message.content.upper() or 'サイレント' in message.content:
+                vc = await channel.connect()
+                if not bgm_id == 0:
+                    toBot = client.get_channel(bgm_id)
+                    await toBot.send('MLgacha')
 
             await asyncio.sleep(0.7)
-            msg = await message.channel.send(message.author.mention + ' https://i.imgur.com/da2w9YS.gifv')
+            msg = await message.channel.send(author.mention + ' https://i.imgur.com/da2w9YS.gifv')
             await msg.add_reaction('👆')
 
-            await mlg_touch(msg,flag,message,result,img,message.author,kind,vc,20,0)
+            await mlg_touch(msg,message,result,img,author,kind,vc,20,0)
 
-            while vc.is_playing():
-                await asyncio.sleep(2)
+            if vc.is_connected():
+                while vc.is_playing():
+                    await asyncio.sleep(2)
             return
 
+        role = 0
+
+        fes_flag = 0
+        ssr_flag = 0
+        sr_flag = 0
+
         if '10' in message.content or '１０' in message.content:
-            kind = ''
-            try:
-                gacha_count += 10
-                with open('./gacha_count/' + str(message.author.id) + '.txt', 'w') as f:
-                    f.write(str(gacha_count))
-            except:
-                print('ガシャ回数の記録ができませんでした。')
+            role = 10
+        else:
+            role = 1
 
-            if pickup_name == 'ミリオンフェス':
-                kind = '10回プラチナガシャ「ミリオンフェス」'
-            else:
-                kind = '10回プラチナガシャ「' + pickup_name + '」'
+        try:
+            gacha_count += role
+            with open('./gacha_count/' + str(author.id) + '.txt', 'w') as f:
+                f.write(str(gacha_count))
+        except:
+            print('ガシャ回数の記録ができませんでした。')
 
-            result = []
-            img = ''
-            author = message.author
-
-            fes_flag = 0
-            ssr_flag = 0
-            sr_flag = 0
-            pink_flag = random.randint(1, 20)
-            
-            for n in range(9):
+        kind = str(role) + '回プラチナガシャ「' + pickup_name + '」'
+        
+        for n in range(role):
+            if n > 9:
                 rand = random.randint(1, 100)
                 if pickup_name == 'ミリオンフェス':
                     if rand >= 1 and rand <= 6:
@@ -333,176 +334,79 @@ async def on_message(message):
                         sr_flag = 1
                     elif rand >= 16 and rand <= 100:
                         result.append(rlist[random.randrange(len(rlist) - 1)])
-
-            if pickup_name == 'ミリオンフェス':
-                rand = random.randint(1, 100)
-                if rand >= 1 and rand <= 6:
-                    result.append(ssrlist[random.randrange(len(ssrlist) - 1)])
-                    ssr_flag = 1
-                elif rand >= 7 and rand <= 100:
-                    result.append(srlist[random.randrange(len(srlist) - 1)])
-                    sr_flag = 1
-            else:
-                rand = random.randint(1, 100)
-                if rand >= 1 and rand <= 3:
-                    result.append(ssrlist[random.randrange(len(ssrlist) - 1)])
-                    ssr_flag = 1
-                elif rand >= 4 and rand <= 100:
-                    result.append(srlist[random.randrange(len(srlist) - 1)])
-                    sr_flag = 1
-
-            if pickup_name == 'ミリオンフェス':
-                for val in result:
-                    if val[5] == 3:
-                        fes_flag = 1
-
-            if fes_flag == 1:
-                if pink_flag == 10:
-                    img = 'https://i.imgur.com/fGpfCgB.gifv'
-                elif pink_flag == 20:
-                    img = 'https://i.imgur.com/jWTTZ0d.gifv'
+            if n == 9:
+                if pickup_name == 'ミリオンフェス':
+                    rand = random.randint(1, 100)
+                    if rand >= 1 and rand <= 6:
+                        result.append(ssrlist[random.randrange(len(ssrlist) - 1)])
+                        ssr_flag = 1
+                    elif rand >= 7 and rand <= 100:
+                        result.append(srlist[random.randrange(len(srlist) - 1)])
+                        sr_flag = 1
                 else:
-                    img = 'https://i.imgur.com/0DxyVhm.gifv'
-            elif ssr_flag == 1 and not fes_flag == 1:
+                    rand = random.randint(1, 100)
+                    if rand >= 1 and rand <= 3:
+                        result.append(ssrlist[random.randrange(len(ssrlist) - 1)])
+                        ssr_flag = 1
+                    elif rand >= 4 and rand <= 100:
+                        result.append(srlist[random.randrange(len(srlist) - 1)])
+                        sr_flag = 1
+
+        if pickup_name == 'ミリオンフェス':
+            for val in result:
+                if val[5] == 3:
+                    fes_flag = 1
+
+        pink_flag = random.randint(1, 20)
+        if fes_flag == 1:
+            if pink_flag == 10:
+                img = 'https://i.imgur.com/fGpfCgB.gifv'
+            elif pink_flag == 20:
                 img = 'https://i.imgur.com/jWTTZ0d.gifv'
-            elif sr_flag == 1 and not fes_flag == 1 and not ssr_flag == 1:
-                img = 'https://i.imgur.com/vF7fDn3.gifv'
             else:
-                img = 'https://i.imgur.com/hEHa49X.gifv'
-
-            vc = await channel.connect()
-            print('Start MLGacha[' + kind + '] by ' + message.author.name + '.')
-
-            mess = random.randint(1,10)
-            if mess >= 2 and (ssr_flag == 1 or fes_flag == 1):
-                vc.play(discord.FFmpegPCMAudio('./mlg/message.mp3'))
-                mess = await message.channel.send('最高の一枚ができましたのでぜひご確認ください！')
-                while vc.is_playing():
-                    await asyncio.sleep(3)
-                await mess.delete()
-            elif mess <= 8 and (sr_flag == 1 or ssr_flag == 1 or fes_flag == 1):
-                vc.play(discord.FFmpegPCMAudio('./mlg/message.mp3'))
-                mess = await message.channel.send('みんなのいい表情が撮れました！')
-                while vc.is_playing():
-                    await asyncio.sleep(3)
-                await mess.delete()
-            elif mess >= 5 and img == sr_flag == 1 and not (ssr_flag == 1 or fes_flag == 1):
-                vc.play(discord.FFmpegPCMAudio('./mlg/message.mp3'))
-                mess = await message.channel.send('楽しそうなところが撮れましたよ')
-                while vc.is_playing():
-                    await asyncio.sleep(3)
-                await mess.delete()
-
-            if 'SILENT' in message.content.upper() or 'サイレント' in message.content:
-                flag = 3
-            else:
-                flag = 2
-                if not bgm_id == 0:
-                    toBot = client.get_channel(bgm_id)
-                    await toBot.send('MLgacha')
-
-            await asyncio.sleep(0.7)
-            if fes_flag == 1 and pink_flag == 10:
-                msg = await message.channel.send('https://i.imgur.com/ZC8JK9i.gifv')
-            else:
-                msg = await message.channel.send('https://i.imgur.com/da2w9YS.gifv')
-            await msg.add_reaction('👆')
-            
-            await mlg_touch(msg,flag,message,result,img,author,kind,vc,pink_flag,fes_flag)
-                
-            while vc.is_playing():
-                await asyncio.sleep(2)
+                img = 'https://i.imgur.com/0DxyVhm.gifv'
+        elif ssr_flag == 1 and not fes_flag == 1:
+            img = 'https://i.imgur.com/jWTTZ0d.gifv'
+        elif sr_flag == 1 and not fes_flag == 1 and not ssr_flag == 1:
+            img = 'https://i.imgur.com/vF7fDn3.gifv'
         else:
-            result = []
-            img = []
-            author = message.author
-            kind = ''
-            try:
-                gacha_count += 1
-                with open('./gacha_count/' + str(message.author.id) + '.txt', 'w') as f:
-                    f.write(str(gacha_count))
-            except:
-                print('ガシャ回数の記録ができませんでした。')
+            img = 'https://i.imgur.com/hEHa49X.gifv'
 
-            rand = random.randint(1, 100)
-            fes_flag = 0
-            pink_flag = random.randint(1, 20)
-
-            if pickup_name == 'ミリオンフェス':
-                kind = '1回プラチナガシャ「ミリオンフェス」'
-                if rand >= 1 and rand <= 6:
-                    result = ssrlist[random.randrange(0, len(ssrlist) - 1)]
-                    if result[5] == 3:
-                        if pink_flag == 10:
-                            img = 'https://i.imgur.com/fGpfCgB.gifv'
-                        elif pink_flag == 20:
-                            img = 'https://i.imgur.com/jWTTZ0d.gifv'
-                        else:
-                            img = 'https://i.imgur.com/0DxyVhm.gifv'
-                        fes_flag = 1
-                    else:
-                        img = 'https://i.imgur.com/jWTTZ0d.gifv'
-                elif rand >= 7 and rand <= 18:
-                    result = srlist[random.randrange(0, len(srlist) - 1)]
-                    img = 'https://i.imgur.com/vF7fDn3.gifv'
-                elif rand >= 18 and rand <= 100:
-                    result = rlist[random.randrange(0, len(rlist) - 1)]
-                    img = 'https://i.imgur.com/hEHa49X.gifv'
-            else:
-                kind = '1回プラチナガシャ「' + pickup_name + '」'
-                if rand >= 1 and rand <= 3:
-                    result = ssrlist[random.randrange(0, len(ssrlist) - 1)]
-                    img = 'https://i.imgur.com/jWTTZ0d.gifv'
-                elif rand >= 4 and rand <= 15:
-                    result = srlist[random.randrange(0, len(srlist) - 1)]
-                    img = 'https://i.imgur.com/vF7fDn3.gifv'
-                elif rand >= 16 and rand <= 100:
-                    result = rlist[random.randrange(0, len(rlist) - 1)]
-                    img = 'https://i.imgur.com/hEHa49X.gifv'
-
-            if 'LOG' in message.content.upper():
-                print('乱数：' + str(rand) + 'リスト：' +  str(result))
-
+        if not 'SILENT' in message.content.upper() or 'サイレント' in message.content:
             vc = await channel.connect()
-            print('Start MLGacha[' + kind + '] by ' + message.author.name + '.')
+        print('Start MLGacha[' + kind + '] by ' + author.name + '.')
 
-            mess = random.randint(1,10)
-            if mess >= 2 and (img == 'https://i.imgur.com/jWTTZ0d.gifv' or fes_flag == 1) and not img == 'https://i.imgur.com/vF7fDn3.gifv' and not img == 'https://i.imgur.com/hEHa49X.gifv':
-                vc.play(discord.FFmpegPCMAudio('./mlg/message.mp3'))
-                mess = await message.channel.send('最高の一枚ができましたのでぜひご確認ください！')
-                while vc.is_playing():
-                    await asyncio.sleep(3)
-                await mess.delete()
-            elif mess <= 5 and (img == 'https://i.imgur.com/vF7fDn3.gifv' or img == 'https://i.imgur.com/jWTTZ0d.gifv' or fes_flag == 1):
-                vc.play(discord.FFmpegPCMAudio('./mlg/message.mp3'))
-                mess = await message.channel.send('みんなのいい表情が撮れました！')
-                while vc.is_playing():
-                    await asyncio.sleep(3)
-                await mess.delete()
-            elif mess >= 6 and img == 'https://i.imgur.com/vF7fDn3.gifv'and not (img == 'https://i.imgur.com/jWTTZ0d.gifv' or fes_flag == 1):
-                vc.play(discord.FFmpegPCMAudio('./mlg/message.mp3'))
-                mess = await message.channel.send('楽しそうなところが撮れましたよ')
-                while vc.is_playing():
-                    await asyncio.sleep(3)
-                await mess.delete()
+        mess = random.randint(1,10)
+        phrase = str()
+        if mess >= 2 and (ssr_flag == 1 or fes_flag == 1):
+            phrase = '最高の一枚ができましたのでぜひご確認ください！'
+        elif mess <= 4 and (sr_flag == 1 or ssr_flag == 1 or fes_flag == 1):
+            phrase = 'みんなのいい表情が撮れました！'
+        elif mess > 4 and mess <= 8 and (sr_flag == 1 or ssr_flag == 1 or fes_flag == 1):
+            phrase = '楽しそうなところが撮れましたよ'
+
+        if not len(phrase) == 0:
+            vc.play(discord.FFmpegPCMAudio('./resources/message.mp3'))
+            camera = await message.channel.send(phrase)
+            while vc.is_playing():
+                await asyncio.sleep(3)
+            await camera.delete()
+
+        if not 'SILENT' in message.content.upper() or 'サイレント' in message.content:
+            if not bgm_id == 0:
+                toBot = client.get_channel(bgm_id)
+                await toBot.send('MLgacha')
+
+        await asyncio.sleep(0.7)
+        if fes_flag == 1 and pink_flag == 10:
+            msg = await message.channel.send(author.mention + ' https://i.imgur.com/ZC8JK9i.gifv')
+        else:
+            msg = await message.channel.send(author.mention + ' https://i.imgur.com/da2w9YS.gifv')
+        await msg.add_reaction('👆')
+        
+        await mlg_touch(msg,message,result,img,author,kind,vc,pink_flag,fes_flag)
             
-            if 'SILENT' in message.content.upper() or 'サイレント' in message.content:
-                flag = 1
-            else:
-                flag = 0
-                if not bgm_id == 0:
-                    toBot = client.get_channel(bgm_id)
-                    await toBot.send('MLgacha')
-
-            await asyncio.sleep(0.7)
-            if fes_flag == 1 and pink_flag == 10:
-                msg = await message.channel.send(author.mention + ' https://i.imgur.com/ZC8JK9i.gifv')
-            else:
-                msg = await message.channel.send(author.mention + ' https://i.imgur.com/da2w9YS.gifv')
-            await msg.add_reaction('👆')
-            
-            await mlg_touch(msg,flag,message,result,img,author,kind,vc,pink_flag,fes_flag)
-
+        if vc.is_connected():
             while vc.is_playing():
                 await asyncio.sleep(2)
 
@@ -515,14 +419,14 @@ async def gacha_reload():
     mlg_all = []
     pickup = []
     
-    with open('mlg/pickup_name.txt',encoding="utf-8_sig") as f:
+    with open('./resources/pickup_name.txt',encoding="utf-8_sig") as f:
         pickup_name = f.read()
 
     fescount = 0
     ssrcount = 0
     srcount = 0
     rcount = 0
-    with open('mlg/mlg_all.csv',encoding="utf-8_sig") as f:
+    with open('./resources/mlg_all.csv',encoding="utf-8_sig") as f:
         reader = csv.reader(f)
         for row in reader:
             indata = [row[3],str(row[4]),row[5],row[6],str(row[7]),int(row[2]),int(row[1]),int(row[0])]
@@ -687,61 +591,62 @@ async def gacha_note(message):
             await msg.delete()
             break
 
-async def mlg_touch(msg,flag,message,result,img,author,kind,vc,pink_flag,fes_flag):
+async def mlg_touch(msg,message,result,img,author,kind,vc,pink_flag,fes_flag):
     try:
         rarity = ''
         log = ''
-        if flag < 2:
-            while True:
-                target_reaction, user = await client.wait_for('reaction_add')
+        count = 0
+        while True:
+            target_reaction, user = await client.wait_for('reaction_add')
 
-                if user != msg.author:
-                    if target_reaction.emoji == '👆':
-                        await msg.clear_reactions()
-                        await msg.edit(content=img)
+            if user != msg.author:
+                if target_reaction.emoji == '👆':
+                    while count < len(result):
+                        result_10 = result[count]
+                        if count == 0:
+                            await msg.clear_reactions()
+                            await msg.edit(content=img)
 
-                        if flag == 0:
-                            await asyncio.sleep(0.4)
-                            if fes_flag == 1 and not pink_flag == 20:
-                                vc.play(discord.FFmpegPCMAudio('./mlg/open_fes.mp3'))
-                            else:
-                                vc.play(discord.FFmpegPCMAudio('./mlg/open.mp3'))
-                        if result[5] == 3:
+                            if vc.is_connected():
+                                await asyncio.sleep(0.4)
+                                if fes_flag == 1 and not pink_flag == 20:
+                                    vc.play(discord.FFmpegPCMAudio('./resources/open_fes.mp3'))
+                                else:
+                                    vc.play(discord.FFmpegPCMAudio('./resources/open.mp3'))
+                                while vc.is_playing():
+                                    await asyncio.sleep(1)
+                        if result_10[5] == 3:
                             rarity = 'FES SSR'
-                            player_show = discord.FFmpegPCMAudio('./mlg/fes.mp3')
+                            player_show = discord.FFmpegPCMAudio('./resources/fes.mp3')
                             await msg.clear_reactions()
-                        elif result[5] == 2:
+                        elif result_10[5] == 2:
                             rarity = 'SSR'
-                            player_show = discord.FFmpegPCMAudio('./mlg/ssr.mp3')
+                            player_show = discord.FFmpegPCMAudio('./resources/ssr.mp3')
                             await msg.clear_reactions()
-                        elif result[5] == 1:
+                        elif result_10[5] == 1:
                             rarity = 'SR'
-                            player_show = discord.FFmpegPCMAudio('./mlg/normal.mp3')
-                        elif result[5] == 0:
+                            player_show = discord.FFmpegPCMAudio('./resources/normal.mp3')
+                        elif result_10[5] == 0:
                             rarity = 'R'
-                            player_show = discord.FFmpegPCMAudio('./mlg/normal.mp3')
-                        else:
-                            rarity = 'R(error)'
-                            player_show = discord.FFmpegPCMAudio('./mlg/normal.mp3')
+                            player_show = discord.FFmpegPCMAudio('./resources/normal.mp3')
 
-                        desc = rarity + '　' + result[1] + '　' + result[0]
+                        desc = rarity + '　' + result_10[1] + '　' + result_10[0]
                         for data in imas.million_data:
-                            if result[0] in data[0]:
+                            if result_10[0] in data[0]:
                                 color = data[2]
                                 cv = 'CV.' + data[3]
                         msgto3 = discord.Embed(title=desc, description=cv, colour=color)
 
-                        footer_text = kind
+                        footer_text = kind + str((count + 1)) + '枚目'
                         msgto3.set_author(name=author.name, icon_url=author.avatar_url)
                         msgto3.set_footer(text=footer_text)
 
-                        msgto3.set_image(url=result[2])
-                        if flag == 0:
-                            while vc.is_playing():
-                                await asyncio.sleep(1)
+                        msgto3.set_image(url=result_10[2])
+                        if vc.is_connected():
                             vc.play(player_show)
 
-                        await msg.edit(content='----', embed=msgto3)
+                        #カード表示（SSRの場合特訓前）
+                        await msg.edit(content=author.mention, embed=msgto3)
 
                         char_list = list()
 
@@ -754,47 +659,111 @@ async def mlg_touch(msg,flag,message,result,img,author,kind,vc,pink_flag,fes_fla
 
                         with open('./gacha/' + str(author.id) + '.txt', 'w+') as f:
                             try:
-                                char_list[result[7]] = '1'
+                                char_list[result_10[7]] = '1'
                             except:
-                                for n in range(1000):
+                                for n in range(500):
                                     char_list.append('0')
-                                char_list[result[7]] = '1'
+                                char_list[result_10[7]] = '1'
 
                             newlistline = ''.join(char_list)
                             f.write(newlistline)
 
                         if rarity == 'SSR' or rarity == 'FES SSR':
-                            if flag == 0:
+                            if vc.is_connected():
                                 while vc.is_playing():
                                     await asyncio.sleep(1)
-                                vc.play(discord.FFmpegPCMAudio('./mlg/ssr_talk.mp3'))
+                                vc.play(discord.FFmpegPCMAudio('./resources/ssr_talk.mp3'))
 
-                            line = result[4].replace("ProP", author.name + "P")
+                            line = result_10[4].replace("ProP", author.name + "P")
                             msgto4 = discord.Embed(title=desc, description=cv, colour=color)
-                            msgto4.set_author(name=author.name, icon_url=author.avatar_url)
-                            msgto4.set_footer(text=footer_text)
-                            msgto4.set_image(url=result[3])
+                            msgto4.set_footer(text=footer_text, icon_url=author.avatar_url)
+                            msgto4.set_image(url=result_10[3])
 
                             await asyncio.sleep(4.2)
-                            await msg.edit(content='----', embed=msgto4)
+                            await msg.edit(content=author.mention, embed=msgto4)
                             await asyncio.sleep(3)
-                            await msg.edit(content=result[0] + '「' + line + '」', embed=msgto4)
+                            await msg.edit(content=author.mention + ' ' + result_10[0] + '「' + line + '」', embed=msgto4)
 
                             await msg.add_reaction('👆')
+                            await msg.add_reaction('⏭')
                             while True:
                                 target_reaction2, user = await client.wait_for('reaction_add')
 
                                 if target_reaction2.emoji == '👆' and user != msg.author:
-                                    if flag == 0:
+                                    if vc.is_connected():
                                         if vc.is_playing():
                                             vc.stop()
+                                    count += 1
+                                    log += '[' + rarity + ']' + result_10[1] + ' ' + result_10[0] + '\n'
+                                    if count == 10:
+                                        if vc.is_connected():
+                                            if not bgm_id == 0:
+                                                toBot = client.get_channel(bgm_id)
+                                                await toBot.send('disconnect')
+                                        await vc.disconnect()
+                                        await msg.clear_reactions()
+                                        await msg.delete()
+
+                                        gacha_count = str()
+                                        try:
+                                            with open('./gacha_count/' + str(message.author.id) + '.txt', 'r') as f:
+                                                gacha_count = f.read()
+                                        except:
+                                            pass
+
+                                        toLog = client.get_channel(log_id)
+                                        footer_text = kind
+                                        msgto5 = discord.Embed(title='ガシャ結果', description=log + '\nドリームスター所持数：' + gacha_count)
+                                        msgto5.set_author(name=author.name, icon_url=author.avatar_url)
+                                        msgto5.set_footer(text=footer_text)
+                                        await toLog.send(embed=msgto5)
+
+                                        print('MLGacha10 complete. ' + author.name + '`s result\n' + log)
+                                        return
+                                    else:
+                                        await msg.remove_reaction(target_reaction2.emoji, user)
+                                    break
+                                elif target_reaction2.emoji == '⏭' and user != msg.author:
+                                    if vc.is_connected():
                                         if not bgm_id == 0:
                                             toBot = client.get_channel(bgm_id)
                                             await toBot.send('disconnect')
                                     await vc.disconnect()
-                                    await msg.clear_reactions()
-                                    await msg.delete()
-                                    
+
+                                    for n,box in enumerate(result):
+                                        if count > n:
+                                            continue
+
+                                        if box[5] == 3:
+                                            rarity = 'FES SSR'
+                                        elif box[5] == 2:
+                                            rarity = 'SSR'
+                                        elif box[5] == 1:
+                                            rarity = 'SR'
+                                        elif box[5] == 0:
+                                            rarity = 'R'
+                                        log += '[' + rarity + ']' + box[1] + ' ' + box[0] + '\n'
+
+                                        char_list = list()
+
+                                        try:
+                                            with open('./gacha/' + str(author.id) + '.txt', 'r') as f:
+                                                listline = f.read()
+                                                char_list = list(listline)
+                                        except:
+                                            pass
+
+                                        with open('./gacha/' + str(author.id) + '.txt', 'w+') as f:
+                                            try:
+                                                char_list[box[7]] = '1'
+                                            except:
+                                                for n in range(500):
+                                                    char_list.append('0')
+                                                char_list[box[7]] = '1'
+
+                                            newlistline = ''.join(char_list)
+                                            f.write(newlistline)
+
                                     gacha_count = str()
                                     try:
                                         with open('./gacha_count/' + str(message.author.id) + '.txt', 'r') as f:
@@ -802,32 +771,97 @@ async def mlg_touch(msg,flag,message,result,img,author,kind,vc,pink_flag,fes_fla
                                     except:
                                         pass
 
-                                    log += '[' + rarity + ']' + result[1] + ' ' + result[0]
-                                    print('MLGacha complete. ' + author.name + '`s result：' + log)
-
+                                    count += 10
+                                    await msg.delete()
                                     toLog = client.get_channel(log_id)
-                                    footer_text = kind + '　'
-                                    msgto5 = discord.Embed(title='ガシャ結果', description=log + '\n\nドリームスター所持数：' + gacha_count)
+                                    footer_text = kind
+                                    msgto5 = discord.Embed(title='ガシャ結果', description=log + '\nドリームスター所持数：' + gacha_count)
                                     msgto5.set_author(name=author.name, icon_url=author.avatar_url)
                                     msgto5.set_footer(text=footer_text)
                                     await toLog.send(embed=msgto5)
-                                    return
+
+                                    print('MLGacha10 complete. ' + author.name + '`s result\n' + log)
+                                    break
                         else:
                             await msg.add_reaction('👆')
+                            await msg.add_reaction('⏭')
                             while True:
                                 target_reaction2, user = await client.wait_for('reaction_add')
 
                                 if target_reaction2.emoji == '👆' and user != msg.author:
-                                    if flag == 0:
+                                    if vc.is_connected():
                                         if vc.is_playing():
                                             vc.stop()
+                                    count += 1
+                                    log += '[' + rarity + ']' + result_10[1] + ' ' + result_10[0] + '\n'
+                                    if count == 10:
+                                        await msg.clear_reactions()
+                                        if vc.is_connected():
+                                            if not bgm_id == 0:
+                                                toBot = client.get_channel(bgm_id)
+                                                await toBot.send('disconnect')
+                                        await vc.disconnect()
+                                        await msg.delete()
+
+                                        gacha_count = str()
+                                        try:
+                                            with open('./gacha_count/' + str(message.author.id) + '.txt', 'r') as f:
+                                                gacha_count = f.read()
+                                        except:
+                                            pass
+
+                                        toLog = client.get_channel(log_id)
+                                        footer_text = kind
+                                        msgto5 = discord.Embed(title='ガシャ結果', description=log + '\nドリームスター所持数：' + gacha_count)
+                                        msgto5.set_author(name=author.name, icon_url=author.avatar_url)
+                                        msgto5.set_footer(text=footer_text)
+                                        await toLog.send(embed=msgto5)
+                                        print('MLGacha10 complete. ' + author.name + '`s result\n' + log)
+                                        return
+                                    else:
+                                        await msg.remove_reaction(target_reaction2.emoji, user)
+                                    break
+                                elif target_reaction2.emoji == '⏭' and user != msg.author:
+                                    if vc.is_connected():
                                         if not bgm_id == 0:
                                             toBot = client.get_channel(bgm_id)
                                             await toBot.send('disconnect')
                                     await vc.disconnect()
-                                    await msg.clear_reactions()
-                                    await msg.delete()
-                                    
+
+                                    for n, box in enumerate(result):
+                                        if count > n:
+                                            continue
+
+                                        if box[5] == 3:
+                                            rarity = 'FES SSR'
+                                        elif box[5] == 2:
+                                            rarity = 'SSR'
+                                        elif box[5] == 1:
+                                            rarity = 'SR'
+                                        elif box[5] == 0:
+                                            rarity = 'R'
+                                        log += '[' + rarity + ']' + box[1] + ' ' + box[0] + '\n'
+
+                                        char_list = list()
+
+                                        try:
+                                            with open('./gacha/' + str(author.id) + '.txt', 'r') as f:
+                                                listline = f.read()
+                                                char_list = list(listline)
+                                        except:
+                                            pass
+
+                                        with open('./gacha/' + str(author.id) + '.txt', 'w+') as f:
+                                            try:
+                                                char_list[box[7]] = '1'
+                                            except:
+                                                for n in range(500):
+                                                    char_list.append('0')
+                                                char_list[box[7]] = '1'
+
+                                            newlistline = ''.join(char_list)
+                                            f.write(newlistline)
+
                                     gacha_count = str()
                                     try:
                                         with open('./gacha_count/' + str(message.author.id) + '.txt', 'r') as f:
@@ -835,307 +869,23 @@ async def mlg_touch(msg,flag,message,result,img,author,kind,vc,pink_flag,fes_fla
                                     except:
                                         pass
 
-                                    log += '[' + rarity + ']' + result[1] + ' ' + result[0]
-                                    print('MLGacha complete. ' + author.name + '`s result：' + log)
-
+                                    count += 10
+                                    await msg.delete()
                                     toLog = client.get_channel(log_id)
-                                    footer_text = kind + '　'
-                                    msgto5 = discord.Embed(title='ガシャ結果', description=log + '\n\nドリームスター所持数：' + gacha_count)
+                                    footer_text = kind
+                                    msgto5 = discord.Embed(title='ガシャ結果', description=log + '\nドリームスター所持数：' + gacha_count)
                                     msgto5.set_author(name=author.name, icon_url=author.avatar_url)
                                     msgto5.set_footer(text=footer_text)
                                     await toLog.send(embed=msgto5)
-                                    return
-        elif flag >= 2:
-            count = 0
-            while True:
-                target_reaction, user = await client.wait_for('reaction_add')
 
-                if user != msg.author:
-                    if target_reaction.emoji == '👆':
-                        while count < 10:
-                            result_10 = result[count]
-                            if count == 0:
-                                await msg.clear_reactions()
-                                await msg.edit(content=img)
-
-                                if flag == 2:
-                                    await asyncio.sleep(0.4)
-                                    if fes_flag == 1 and not pink_flag == 20:
-                                        vc.play(discord.FFmpegPCMAudio('./mlg/open_fes.mp3'))
-                                    else:
-                                        vc.play(discord.FFmpegPCMAudio('./mlg/open.mp3'))
-                                    while vc.is_playing():
-                                        await asyncio.sleep(1)
-                            if result_10[5] == 3:
-                                rarity = 'FES SSR'
-                                player_show = discord.FFmpegPCMAudio('./mlg/fes.mp3')
-                                await msg.clear_reactions()
-                            elif result_10[5] == 2:
-                                rarity = 'SSR'
-                                player_show = discord.FFmpegPCMAudio('./mlg/ssr.mp3')
-                                await msg.clear_reactions()
-                            elif result_10[5] == 1:
-                                rarity = 'SR'
-                                player_show = discord.FFmpegPCMAudio('./mlg/normal.mp3')
-                            elif result_10[5] == 0:
-                                rarity = 'R'
-                                player_show = discord.FFmpegPCMAudio('./mlg/normal.mp3')
-
-                            desc = rarity + '　' + result_10[1] + '　' + result_10[0]
-                            for r,data in enumerate(imas.million_data):
-                                if result_10[0] in data[0]:
-                                    color = data[2]
-                                    cv = 'CV.' + data[3]
-                            msgto3 = discord.Embed(title=desc, description=cv, colour=color)
-
-                            footer_text = kind + str((count + 1)) + '枚目'
-                            msgto3.set_author(name=author.name, icon_url=author.avatar_url)
-                            msgto3.set_footer(text=footer_text)
-
-                            msgto3.set_image(url=result_10[2])
-                            if flag == 2:
-                                vc.play(player_show)
-
-                            #カード表示（SSRの場合特訓前）
-                            await msg.edit(content='----', embed=msgto3)
-
-                            char_list = list()
-
-                            try:
-                                with open('./gacha/' + str(author.id) + '.txt', 'r') as f:
-                                    listline = f.read()
-                                    char_list = list(listline)
-                            except:
-                                pass
-
-                            with open('./gacha/' + str(author.id) + '.txt', 'w+') as f:
-                                try:
-                                    char_list[result_10[7]] = '1'
-                                except:
-                                    for n in range(500):
-                                        char_list.append('0')
-                                    char_list[result_10[7]] = '1'
-
-                                newlistline = ''.join(char_list)
-                                f.write(newlistline)
-
-                            if rarity == 'SSR' or rarity == 'FES SSR':
-                                if flag == 2:
-                                    while vc.is_playing():
-                                        await asyncio.sleep(1)
-                                    vc.play(discord.FFmpegPCMAudio('./mlg/ssr_talk.mp3'))
-
-                                line = result_10[4].replace("ProP", author.name + "P")
-                                msgto4 = discord.Embed(title=desc, description=cv, colour=color)
-                                msgto4.set_footer(text=footer_text, icon_url=author.avatar_url)
-                                msgto4.set_image(url=result_10[3])
-
-                                await asyncio.sleep(4.2)
-                                await msg.edit(content='----', embed=msgto4)
-                                await asyncio.sleep(3)
-                                await msg.edit(content=result_10[0] + '「' + line + '」', embed=msgto4)
-
-                                await msg.add_reaction('👆')
-                                await msg.add_reaction('⏭')
-                                while True:
-                                    target_reaction2, user = await client.wait_for('reaction_add')
-
-                                    if target_reaction2.emoji == '👆' and user != msg.author:
-                                        if flag == 2:
-                                            if vc.is_playing():
-                                                vc.stop()
-                                        count += 1
-                                        log += '[' + rarity + ']' + result_10[1] + ' ' + result_10[0] + '\n'
-                                        if count == 10:
-                                            if flag == 2:
-                                                if not bgm_id == 0:
-                                                    toBot = client.get_channel(bgm_id)
-                                                    await toBot.send('disconnect')
-                                            await vc.disconnect()
-                                            await msg.clear_reactions()
-                                            await msg.delete()
-
-                                            gacha_count = str()
-                                            try:
-                                                with open('./gacha_count/' + str(message.author.id) + '.txt', 'r') as f:
-                                                    gacha_count = f.read()
-                                            except:
-                                                pass
-
-                                            toLog = client.get_channel(log_id)
-                                            footer_text = kind
-                                            msgto5 = discord.Embed(title='ガシャ結果', description=log + '\nドリームスター所持数：' + gacha_count)
-                                            msgto5.set_author(name=author.name, icon_url=author.avatar_url)
-                                            msgto5.set_footer(text=footer_text)
-                                            await toLog.send(embed=msgto5)
-
-                                            print('MLGacha10 complete. ' + author.name + '`s result\n' + log)
-                                            return
-                                        else:
-                                            await msg.remove_reaction(target_reaction2.emoji, user)
-                                        break
-                                    elif target_reaction2.emoji == '⏭' and user != msg.author:
-                                        if flag == 2:
-                                            if not bgm_id == 0:
-                                                toBot = client.get_channel(bgm_id)
-                                                await toBot.send('disconnect')
-                                        await vc.disconnect()
-
-                                        for n,box in enumerate(result):
-                                            if count > n:
-                                                continue
-
-                                            if box[5] == 3:
-                                                rarity = 'FES SSR'
-                                            elif box[5] == 2:
-                                                rarity = 'SSR'
-                                            elif box[5] == 1:
-                                                rarity = 'SR'
-                                            elif box[5] == 0:
-                                                rarity = 'R'
-                                            log += '[' + rarity + ']' + box[1] + ' ' + box[0] + '\n'
-
-                                            char_list = list()
-
-                                            try:
-                                                with open('./gacha/' + str(author.id) + '.txt', 'r') as f:
-                                                    listline = f.read()
-                                                    char_list = list(listline)
-                                            except:
-                                                pass
-
-                                            with open('./gacha/' + str(author.id) + '.txt', 'w+') as f:
-                                                try:
-                                                    char_list[box[7]] = '1'
-                                                except:
-                                                    for n in range(500):
-                                                        char_list.append('0')
-                                                    char_list[box[7]] = '1'
-
-                                                newlistline = ''.join(char_list)
-                                                f.write(newlistline)
-
-                                        gacha_count = str()
-                                        try:
-                                            with open('./gacha_count/' + str(message.author.id) + '.txt', 'r') as f:
-                                                gacha_count = f.read()
-                                        except:
-                                            pass
-
-                                        count += 10
-                                        await msg.delete()
-                                        toLog = client.get_channel(log_id)
-                                        footer_text = kind
-                                        msgto5 = discord.Embed(title='ガシャ結果', description=log + '\nドリームスター所持数：' + gacha_count)
-                                        msgto5.set_author(name=author.name, icon_url=author.avatar_url)
-                                        msgto5.set_footer(text=footer_text)
-                                        await toLog.send(embed=msgto5)
-
-                                        print('MLGacha10 complete. ' + author.name + '`s result\n' + log)
-                                        break
-                            else:
-                                await msg.add_reaction('👆')
-                                await msg.add_reaction('⏭')
-                                while True:
-                                    target_reaction2, user = await client.wait_for('reaction_add')
-
-                                    if target_reaction2.emoji == '👆' and user != msg.author:
-                                        if flag == 2:
-                                            if vc.is_playing():
-                                                vc.stop()
-                                        count += 1
-                                        log += '[' + rarity + ']' + result_10[1] + ' ' + result_10[0] + '\n'
-                                        if count == 10:
-                                            await msg.clear_reactions()
-                                            if flag == 2:
-                                                if not bgm_id == 0:
-                                                    toBot = client.get_channel(bgm_id)
-                                                    await toBot.send('disconnect')
-                                            await vc.disconnect()
-                                            await msg.delete()
-
-                                            gacha_count = str()
-                                            try:
-                                                with open('./gacha_count/' + str(message.author.id) + '.txt', 'r') as f:
-                                                    gacha_count = f.read()
-                                            except:
-                                                pass
-
-                                            toLog = client.get_channel(log_id)
-                                            footer_text = kind
-                                            msgto5 = discord.Embed(title='ガシャ結果', description=log + '\nドリームスター所持数：' + gacha_count)
-                                            msgto5.set_author(name=author.name, icon_url=author.avatar_url)
-                                            msgto5.set_footer(text=footer_text)
-                                            await toLog.send(embed=msgto5)
-                                            print('MLGacha10 complete. ' + author.name + '`s result\n' + log)
-                                            return
-                                        else:
-                                            await msg.remove_reaction(target_reaction2.emoji, user)
-                                        break
-                                    elif target_reaction2.emoji == '⏭' and user != msg.author:
-                                        if flag == 2:
-                                            if not bgm_id == 0:
-                                                toBot = client.get_channel(bgm_id)
-                                                await toBot.send('disconnect')
-                                        await vc.disconnect()
-
-                                        for n, box in enumerate(result):
-                                            if count > n:
-                                                continue
-
-                                            if box[5] == 3:
-                                                rarity = 'FES SSR'
-                                            elif box[5] == 2:
-                                                rarity = 'SSR'
-                                            elif box[5] == 1:
-                                                rarity = 'SR'
-                                            elif box[5] == 0:
-                                                rarity = 'R'
-                                            log += '[' + rarity + ']' + box[1] + ' ' + box[0] + '\n'
-
-                                            char_list = list()
-
-                                            try:
-                                                with open('./gacha/' + str(author.id) + '.txt', 'r') as f:
-                                                    listline = f.read()
-                                                    char_list = list(listline)
-                                            except:
-                                                pass
-
-                                            with open('./gacha/' + str(author.id) + '.txt', 'w+') as f:
-                                                try:
-                                                    char_list[box[7]] = '1'
-                                                except:
-                                                    for n in range(500):
-                                                        char_list.append('0')
-                                                    char_list[box[7]] = '1'
-
-                                                newlistline = ''.join(char_list)
-                                                f.write(newlistline)
-
-                                        gacha_count = str()
-                                        try:
-                                            with open('./gacha_count/' + str(message.author.id) + '.txt', 'r') as f:
-                                                gacha_count = f.read()
-                                        except:
-                                            pass
-
-                                        count += 10
-                                        await msg.delete()
-                                        toLog = client.get_channel(log_id)
-                                        footer_text = kind
-                                        msgto5 = discord.Embed(title='ガシャ結果', description=log + '\nドリームスター所持数：' + gacha_count)
-                                        msgto5.set_author(name=author.name, icon_url=author.avatar_url)
-                                        msgto5.set_footer(text=footer_text)
-                                        await toLog.send(embed=msgto5)
-
-                                        print('MLGacha10 complete. ' + author.name + '`s result\n' + log)
-                                        break
+                                    print('MLGacha complete. ' + author.name + '`s result\n' + log)
+                                    break
     except:
         import traceback
         traceback.print_exc()
         await msg.delete()
-        await vc.disconnect()
+        if vc.is_connected():
+            await vc.disconnect()
         if not bgm_id == 0:
             toBot = client.get_channel(bgm_id)
             await toBot.send('disconnect')

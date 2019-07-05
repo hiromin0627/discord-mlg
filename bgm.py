@@ -10,8 +10,6 @@ ini.read('./config.ini', 'UTF-8')
 
 token = ini['tokens']['token-bgm']
 vc_id = int(ini['ids']['vc'])
-bgm_id = int(ini['ids']['bgm-room'])
-log_id = int(ini['ids']['log-room'])
 
 client = discord.Client()
 channel = client.get_channel(vc_id)
@@ -33,7 +31,7 @@ async def on_message(message):
         vc = await channel.connect()
         vc.play(discord.FFmpegPCMAudio('./mlg/mlg_bgm.mp3'))
         while vc.is_playing():
-            await asyncio.sleep(3)
+            await asyncio.sleep(1)
             
     if message.content.startswith("disconnect"):
         if channel.is_connected():
