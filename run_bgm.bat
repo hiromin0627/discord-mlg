@@ -1,0 +1,2 @@
+python bgm.py
+exit
