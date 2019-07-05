@@ -12,7 +12,6 @@ token = ini['tokens']['token-bgm']
 vc_id = int(ini['ids']['vc'])
 
 client = discord.Client()
-channel = client.get_channel(vc_id)
 
 @client.event
 async def on_ready():
@@ -28,16 +27,20 @@ async def on_message(message):
         return
 
     if message.content.startswith("MLgacha"):
+        channel = client.get_channel(vc_id)
         vc = await channel.connect()
-        vc.play(discord.FFmpegPCMAudio('./mlg/mlg_bgm.mp3'))
+        vc.play(discord.FFmpegPCMAudio('./resources/mlg_bgm.mp3'))
         while vc.is_playing():
             await asyncio.sleep(1)
             
     if message.content.startswith("disconnect"):
-        if channel.is_connected():
-            vc = channel.voice_client_in()
-        else:
-            vc = await channel.connect()
-        await vc.disconnect()
+        try:
+            if client.voice_clients[0] is not None:
+                vc = client.voice_clients[0]
+                await vc.disconnect()
+        except:
+            msg = await message.channel.send('BGM側ボットでエラーが発生しました')
+            await asyncio.sleep(10)
+            await msg.delete()
 
 client.run(token)
