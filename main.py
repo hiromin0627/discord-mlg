@@ -1,6 +1,8 @@
 #coding: utf-8
 #created by @hiromin0627
- 
+
+import glob
+import os
 import discord
 import asyncio
 import re,random
@@ -59,6 +61,7 @@ async def on_message(message):
         msg = await message.channel.send('ミリシタガシャシミュレーターDiscordボット v0.1.0\n' +\
             prefix + 'help：ヘルプコマンドです。ミリシタガシャの説明を見ることができます。\n' +\
             prefix + 'reload：ミリシタガシャデータベースをダウンロードして更新します。\n' +\
+            prefix + 'reset：全ユーザーのMLガシャを引いた回数をリセットします。\n' +\
             prefix + 'cards：MLガシャで引いたカード名を確認することができます。\n' +\
             prefix + 'pickup：現在のガシャ名とピックアップカードを確認できます。\n' +\
             prefix + 'call：MLガシャで引いたカード画像を検索できます。スペースを挟んでカード名を入力してください。（制服シリーズはアイドル名も記入）\n' +\
@@ -76,6 +79,15 @@ async def on_message(message):
         await message.delete()
         print('Start MLGacha[cards].')
         await gacha_note(message)
+    elif message.content.startswith(prefix + 'reset'):
+        await message.delete()
+        print('Start MLGacha[reset].')
+        file_list = glob.glob("./gacha_count/*.txt")
+        for file in file_list:
+            os.remove(file)
+        msgn = await message.channel.send('すべてのユーザーのガチャカウントをリセットしました。')
+        await asyncio.sleep(10)
+        await msgn.delete()
     elif message.content.startswith(prefix + 'pickup'):
         await message.delete()
         print('Start MLGacha[pickup].')
