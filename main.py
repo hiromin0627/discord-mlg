@@ -328,45 +328,30 @@ async def on_message(message):
             print('ガシャ回数の記録ができませんでした。')
 
         kind = str(role) + '回プラチナガシャ「' + pickup_name + '」'
+
+        ssr_rate = 3
+        if pickup_name == 'ミリオンフェス':
+            ssr_rate = 6
         
         for n in range(role):
             if n < 9:
                 rand = random.randint(1, 100)
-                if pickup_name == 'ミリオンフェス':
-                    if rand >= 1 and rand <= 6:
-                        result.append(ssrlist[random.randrange(len(ssrlist) - 1)])
-                        ssr_flag = 1
-                    elif rand >= 7 and rand <= 18:
-                        result.append(srlist[random.randrange(len(srlist) - 1)])
-                        sr_flag = 1
-                    elif rand >= 18 and rand <= 100:
-                        result.append(rlist[random.randrange(len(rlist) - 1)])
+                if rand >= 1 and rand <= ssr_rate:
+                    result.append(ssrlist[random.randrange(len(ssrlist) - 1)])
+                    ssr_flag = 1
+                elif rand >= (ssr_rate + 1) and rand <= (ssr_rate + 12):
+                    result.append(srlist[random.randrange(len(srlist) - 1)])
+                    sr_flag = 1
                 else:
-                    if rand >= 1 and rand <= 3:
-                        result.append(ssrlist[random.randrange(len(ssrlist) - 1)])
-                        ssr_flag = 1
-                    elif rand >= 4 and rand <= 15:
-                        result.append(srlist[random.randrange(len(srlist) - 1)])
-                        sr_flag = 1
-                    elif rand >= 16 and rand <= 100:
-                        result.append(rlist[random.randrange(len(rlist) - 1)])
+                    result.append(rlist[random.randrange(len(rlist) - 1)])
             if n == 9:
-                if pickup_name == 'ミリオンフェス':
-                    rand = random.randint(1, 100)
-                    if rand >= 1 and rand <= 6:
-                        result.append(ssrlist[random.randrange(len(ssrlist) - 1)])
-                        ssr_flag = 1
-                    elif rand >= 7 and rand <= 100:
-                        result.append(srlist[random.randrange(len(srlist) - 1)])
-                        sr_flag = 1
+                rand = random.randint(1, 100)
+                if rand >= 1 and rand <= ssr_rate:
+                    result.append(ssrlist[random.randrange(len(ssrlist) - 1)])
+                    ssr_flag = 1
                 else:
-                    rand = random.randint(1, 100)
-                    if rand >= 1 and rand <= 3:
-                        result.append(ssrlist[random.randrange(len(ssrlist) - 1)])
-                        ssr_flag = 1
-                    elif rand >= 4 and rand <= 100:
-                        result.append(srlist[random.randrange(len(srlist) - 1)])
-                        sr_flag = 1
+                    result.append(srlist[random.randrange(len(srlist) - 1)])
+                    sr_flag = 1
 
         if pickup_name == 'ミリオンフェス':
             for val in result:
@@ -550,7 +535,7 @@ async def gacha_note(message):
         with open('./gacha_count/' + str(message.author.id) + '.txt', 'r') as f:
             gacha_count = f.read()
     except:
-        pass
+        gacha_count = '0'
 
     fotter_text = 'ドリームスター所持数：' + gacha_count
 
