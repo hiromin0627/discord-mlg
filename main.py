@@ -1,5 +1,6 @@
 #coding: utf-8
 #created by @hiromin0627
+#MilliShita Gacha 1.0.0_JP
 
 import glob
 import os
@@ -44,7 +45,7 @@ timer = 0
 
 @client.event
 async def on_ready():
-    print('---MilliShita Gacha 1.1.0 Alpha---')
+    print('---MilliShita Gacha 1.0.0---')
     print('discord.py ver:' + discord.__version__)
     print('Logged in as ' + client.user.name + '(ID:' + str(client.user.id) + ')')
     print('Bot created by @hiromin0627')
@@ -58,7 +59,7 @@ async def on_message(message):
     if message.content.startswith("MLhelp"):
         await message.delete()
         print('Start MLhelp')
-        msg = await message.channel.send('ミリシタガシャシミュレーターDiscordボット v1.1.0\n' +\
+        msg = await message.channel.send('ミリシタガシャシミュレーターDiscordボット v1.0.0\n' +\
             prefix + 'help：ヘルプコマンドです。ミリシタガシャの説明を見ることができます。\n' +\
             prefix + 'reload：ミリシタガシャデータベースをダウンロードして更新します。\n' +\
             prefix + 'reset：全ユーザーのMLガシャを引いた回数をリセットします。\n' +\
