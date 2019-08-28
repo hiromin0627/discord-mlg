@@ -102,3 +102,8 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# gacha_data
+**/gacha/*
+**/gacha_count/*
+**/gacha_data/*
