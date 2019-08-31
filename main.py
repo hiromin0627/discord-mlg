@@ -1,6 +1,6 @@
 #coding: utf-8
 #created by @hiromin0627
-#MilliShita Gacha 1.1.0
+#MilliShita Gacha 1.1.1
 
 import glob
 import gettext
@@ -60,7 +60,7 @@ timer = 0
 
 @client.event
 async def on_ready():
-    print('---MilliShita Gacha 1.0.0---')
+    print('---MilliShita Gacha 1.1.1---')
     print('discord.py ver:' + discord.__version__)
     print('Logged in as ' + client.user.name + '(ID:' + str(client.user.id) + ')')
     print('Bot created by @hiromin0627')
@@ -75,7 +75,7 @@ async def on_message(message):
         await message.delete()
         print('Start MLhelp')
         if lang == 'ja':
-            msg = await message.channel.send('ミリシタガシャシミュレーターDiscordボット v1.1.0\n' +\
+            msg = await message.channel.send('ミリシタガシャシミュレーターDiscordボット v1.1.1\n' +\
                 prefix + 'help：ヘルプコマンドです。ミリシタガシャの説明を見ることができます。\n' +\
                 prefix + 'reload：ミリシタガシャデータベースをダウンロードして更新します。\n' +\
                 prefix + 'reset：全ユーザーのMLガシャを引いた回数をリセットします。\n' +\
@@ -84,7 +84,7 @@ async def on_message(message):
                 prefix + 'call：MLガシャで引いたカード画像を検索できます。スペースを挟んでカード名を入力してください。（制服シリーズはアイドル名も記入）\n' +\
                 prefix + 'ガシャ or ' + prefix + 'gacha：ミリシタガシャシミュレーターができます。10を後に入力すると、10連ガシャになります。')
         elif lang == 'cn':
-            msg = await message.channel.send('劇場時光轉蛋模擬器Discord Bot v1.1.0\n' +\
+            msg = await message.channel.send('劇場時光轉蛋模擬器Discord Bot v1.1.1\n' +\
                 prefix + 'help：ヘルプコマンドです。ミリシタガシャの説明を見ることができます。\n' +\
                 prefix + 'reload：ミリシタガシャデータベースをダウンロードして更新します。\n' +\
                 prefix + 'reset：全ユーザーのMLガシャを引いた回数をリセットします。\n' +\
@@ -93,7 +93,7 @@ async def on_message(message):
                 prefix + 'call：MLガシャで引いたカード画像を検索できます。スペースを挟んでカード名を入力してください。（制服シリーズはアイドル名も記入）\n' +\
                 prefix + '轉蛋 or ' + prefix + 'gacha：ミリシタガシャシミュレーターができます。10を後に入力すると、10連ガシャになります。')
         elif lang == 'kr':
-            msg = await message.channel.send('밀리언 라이브! 시어터 데이즈 촬영 시뮬레이터 Discord Bot v1.1.0\n' +\
+            msg = await message.channel.send('밀리언 라이브! 시어터 데이즈 촬영 시뮬레이터 Discord Bot v1.1.1\n' +\
                 prefix + 'help：ヘルプコマンドです。ミリシタガシャの説明を見ることができます。\n' +\
                 prefix + 'reload：ミリシタガシャデータベースをダウンロードして更新します。\n' +\
                 prefix + 'reset：全ユーザーのMLガシャを引いた回数をリセットします。\n' +\
@@ -102,7 +102,7 @@ async def on_message(message):
                 prefix + 'call：MLガシャで引いたカード画像を検索できます。スペースを挟んでカード名を入力してください。（制服シリーズはアイドル名も記入）\n' +\
                 prefix + '촬영 or ' + prefix + 'gacha：ミリシタガシャシミュレーターができます。10を後に入力すると、10連ガシャになります。')
         else:
-            msg = await message.channel.send('Million Live! Theater Days Gacha Simulator Discord Bot v1.1.0\n' +\
+            msg = await message.channel.send('Million Live! Theater Days Gacha Simulator Discord Bot v1.1.1\n' +\
                 prefix + 'help：ヘルプコマンドです。ミリシタガシャの説明を見ることができます。\n' +\
                 prefix + 'reload：ミリシタガシャデータベースをダウンロードして更新します。\n' +\
                 prefix + 'reset：全ユーザーのMLガシャを引いた回数をリセットします。\n' +\
@@ -161,15 +161,27 @@ async def on_message(message):
         except:
             pass
 
-        if '制服シリーズ' in message.content[6:]:
+        if _('制服シリーズ') in message.content[6:]:
             for data in imas.million_data:
                 if data[0] in message.content[6:]:
                     for r,val in enumerate(mlg_all):
-                        if val[0] in message.content[6:] and val[1] == '制服シリーズ':
+                        if val[0] in message.content[6:] and val[1] == _('制服シリーズ'):
                             if char_list[r] == '1':
                                 carddata = val
             if len(carddata) == 0:
                 msgn = await message.channel.send(_('制服シリーズの場合、アイドル名も同時に入力する必要があります。'))
+                await asyncio.sleep(10)
+                await msgn.delete()
+                return
+        elif _('シアターデイズ') in message.content[6:]:
+            for data in imas.million_data:
+                if data[0] in message.content[6:]:
+                    for r,val in enumerate(mlg_all):
+                        if val[0] in message.content[6:] and val[1] == _('シアターデイズ'):
+                            if char_list[r] == '1':
+                                carddata = val
+            if len(carddata) == 0:
+                msgn = await message.channel.send(_('シアターデイズの場合、アイドル名も同時に入力する必要があります。'))
                 await asyncio.sleep(10)
                 await msgn.delete()
                 return
