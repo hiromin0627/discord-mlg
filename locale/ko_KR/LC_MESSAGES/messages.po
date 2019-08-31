@@ -1,0 +1,121 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR ORGANIZATION
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2019-08-31 17:16+0900\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: pygettext.py 1.5\n"
+
+
+#: ./main.py:123
+msgid "リロード直後です。"
+msgstr "Please wait for reload data."
+
+#: ./main.py:123
+msgid "秒後にお試しください。"
+msgstr " second for wait."
+
+#: ./main.py:140
+msgid "すべてのユーザーのガチャカウントをリセットしました。"
+msgstr "Reseted all users gacha count."
+
+#: ./main.py:148 ./main.py:256
+msgid "限定"
+msgstr "한정"
+
+#: ./main.py:151
+msgid "現在のミリシタガシャピックアップはこちらです！！"
+msgstr "지금의 픽업 카드는 여기입니다! !"
+
+#: ./main.py:177
+msgid "制服シリーズの場合、アイドル名も同時に入力する必要があります。"
+msgstr "制服シリーズの場合、アイドル名も同時に入力する必要があります。"
+
+#: ./main.py:188
+msgid ""
+"カード名が違うか、このカードを所持していません！\n"
+"「MLcheck」で自分が所持しているカード名を確認してください。"
+msgstr ""
+"カード名が違うか、このカードを所持していません！\n"
+"「MLcheck」で自分が所持しているカード名を確認してください。"
+
+#: ./main.py:200
+msgid "所持カード"
+msgstr "소지 카드 목록"
+
+#: ./main.py:203
+msgid "を押して覚醒後へ"
+msgstr " to check awaked card."
+
+#: ./main.py:205 ./main.py:213
+msgid "を押して閉じる"
+msgstr " to close."
+
+#: ./main.py:229
+msgid "他のユーザーがプレイ中です。終了とクールタイムまでお待ちください。"
+msgstr "他のユーザーがプレイ中です。終了とクールタイムまでお待ちください。"
+
+#: ./main.py:261
+msgid "交換カード一覧"
+msgstr "교환 카드 목록"
+
+#: ./main.py:264
+msgid ""
+"ドリームスターがカード交換数に達しているため、ガシャをご利用いただけません。カードを交換してください。\n"
+"該当番号のリアクションを返すと交換できます。"
+msgstr ""
+"ドリームスターがカード交換数に達しているため、ガシャをご利用いただけません。カードを交換してください。\n"
+"該当番号のリアクションを返すと交換できます。"
+
+#: ./main.py:269
+msgid "ドリームスター交換"
+msgstr "Exchange Dream Stars"
+
+#: ./main.py:362 ./main.py:437
+msgid "ミリオンフェス"
+msgstr "Million Fes"
+
+#: ./main.py:481
+msgid "最高の一枚ができましたのでぜひご確認ください！"
+msgstr "最高の一枚ができましたのでぜひご確認ください！"
+
+#: ./main.py:482
+msgid "みんなのいい表情が撮れました！"
+msgstr "みんなのいい表情が撮れました！"
+
+#: ./main.py:483
+msgid "楽しそうなところが撮れましたよ"
+msgstr "楽しそうなところが撮れましたよ"
+
+#: ./main.py:637
+msgid "所持SSRの記録がないか、エラーが発生しました。"
+msgstr "Error. Check your command."
+
+#: ./main.py:669 ./main.py:820 ./main.py:907
+msgid "ドリームスター所持数："
+msgstr "드림 스타:"
+
+#: ./main.py:673 ./main.py:688 ./main.py:694 ./main.py:702 ./main.py:708
+msgid "所持SSR一覧"
+msgstr "소지 SSR 카드 목록"
+
+#: ./main.py:676
+msgid "見終わったら×で消してね！"
+msgstr "Finish to check card, please reaction '×'."
+
+#: ./main.py:719 ./main.py:920
+msgid "しばらく操作がなかったため、タイムアウトしました。"
+msgstr "Timeouted."
+
+#: ./main.py:820 ./main.py:907
+msgid "ガシャ結果"
+msgstr "촬영결과"
+

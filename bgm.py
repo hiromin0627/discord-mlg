@@ -26,7 +26,7 @@ async def on_message(message):
     if not message.author.bot:
         return
 
-    if message.content.startswith("MLgacha"):
+    if message.content.startswith("MLGstart"):
         channel = client.get_channel(vc_id)
         vc = await channel.connect()
         vc.play(discord.FFmpegPCMAudio('./resources/mlg_bgm.mp3'))
