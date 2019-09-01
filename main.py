@@ -1,6 +1,6 @@
 #coding: utf-8
 #created by @hiromin0627
-#MilliShita Gacha 1.1.1
+#MilliShita Gacha 1.1.2
 
 import glob
 import gettext
@@ -75,7 +75,7 @@ async def on_message(message):
         await message.delete()
         print('Start MLhelp')
         if lang == 'ja':
-            msg = await message.channel.send('ミリシタガシャシミュレーターDiscordボット v1.1.1\n' +\
+            msg = await message.channel.send('ミリシタガシャシミュレーターDiscordボット v1.1.2\n' +\
                 prefix + 'help：ヘルプコマンドです。ミリシタガシャの説明を見ることができます。\n' +\
                 prefix + 'reload：ミリシタガシャデータベースをダウンロードして更新します。\n' +\
                 prefix + 'reset：全ユーザーのMLガシャを引いた回数をリセットします。\n' +\
@@ -84,7 +84,7 @@ async def on_message(message):
                 prefix + 'call：MLガシャで引いたカード画像を検索できます。スペースを挟んでカード名を入力してください。（制服シリーズはアイドル名も記入）\n' +\
                 prefix + 'ガシャ or ' + prefix + 'gacha：ミリシタガシャシミュレーターができます。10を後に入力すると、10連ガシャになります。')
         elif lang == 'cn':
-            msg = await message.channel.send('劇場時光轉蛋模擬器Discord Bot v1.1.1\n' +\
+            msg = await message.channel.send('劇場時光轉蛋模擬器Discord Bot v1.1.2\n' +\
                 prefix + 'help：ヘルプコマンドです。ミリシタガシャの説明を見ることができます。\n' +\
                 prefix + 'reload：ミリシタガシャデータベースをダウンロードして更新します。\n' +\
                 prefix + 'reset：全ユーザーのMLガシャを引いた回数をリセットします。\n' +\
@@ -93,7 +93,7 @@ async def on_message(message):
                 prefix + 'call：MLガシャで引いたカード画像を検索できます。スペースを挟んでカード名を入力してください。（制服シリーズはアイドル名も記入）\n' +\
                 prefix + '轉蛋 or ' + prefix + 'gacha：ミリシタガシャシミュレーターができます。10を後に入力すると、10連ガシャになります。')
         elif lang == 'kr':
-            msg = await message.channel.send('밀리언 라이브! 시어터 데이즈 촬영 시뮬레이터 Discord Bot v1.1.1\n' +\
+            msg = await message.channel.send('밀리언 라이브! 시어터 데이즈 촬영 시뮬레이터 Discord Bot v1.1.2\n' +\
                 prefix + 'help：ヘルプコマンドです。ミリシタガシャの説明を見ることができます。\n' +\
                 prefix + 'reload：ミリシタガシャデータベースをダウンロードして更新します。\n' +\
                 prefix + 'reset：全ユーザーのMLガシャを引いた回数をリセットします。\n' +\
@@ -102,14 +102,14 @@ async def on_message(message):
                 prefix + 'call：MLガシャで引いたカード画像を検索できます。スペースを挟んでカード名を入力してください。（制服シリーズはアイドル名も記入）\n' +\
                 prefix + '촬영 or ' + prefix + 'gacha：ミリシタガシャシミュレーターができます。10を後に入力すると、10連ガシャになります。')
         else:
-            msg = await message.channel.send('Million Live! Theater Days Gacha Simulator Discord Bot v1.1.1\n' +\
-                prefix + 'help：ヘルプコマンドです。ミリシタガシャの説明を見ることができます。\n' +\
-                prefix + 'reload：ミリシタガシャデータベースをダウンロードして更新します。\n' +\
-                prefix + 'reset：全ユーザーのMLガシャを引いた回数をリセットします。\n' +\
-                prefix + 'cards：MLガシャで引いたカード名を確認することができます。\n' +\
-                prefix + 'pickup：現在のガシャ名とピックアップカードを確認できます。\n' +\
-                prefix + 'call：MLガシャで引いたカード画像を検索できます。スペースを挟んでカード名を入力してください。（制服シリーズはアイドル名も記入）\n' +\
-                prefix + 'ガシャ or ' + prefix + 'gacha：ミリシタガシャシミュレーターができます。10を後に入力すると、10連ガシャになります。')
+            msg = await message.channel.send('Million Live! Theater Days Gacha Simulator Discord Bot v1.1.2\n' +\
+                prefix + 'help：This command.\n' +\
+                prefix + 'reload：Download latest MLG database.\n' +\
+                prefix + 'reset：Reset all users gacha count.\n' +\
+                prefix + 'cards：Check cards you have.\n' +\
+                prefix + 'pickup：Check pickup cards.\n' +\
+                prefix + 'call：Check card you have to type card name.\n' +\
+                prefix + 'gacha：Play MLTD Gacha Simulator. Type "10" after this command, play it 10 times in a row.')
         
         print('MLhelp complite.')
     elif message.content.startswith(prefix + "reload"):
