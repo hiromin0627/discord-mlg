@@ -21,13 +21,16 @@ Add "10" (ex."MLgacha10") to play it for 10 times(10連ガシャ).
 - 'ja' is Japanese, 'cn' is Chinese, and 'kr' is Korean(「ja」が日本語、「cn」が中国語繁体字、「kr」が韓国語です).
 - Can be used together '10' and 'ja' or 'cn' or 'kr'. For example, 'MLgahca10cn'(これらのオプションは「MLガシャ10cn」のように併用可能です).
   
-## What is new in MLGv2.0.0
+## What is new in MLG v2.0.0
 - Config.iniの言語設定にかかわらず、別の国のガシャを引くことができるようになった。
 - 言語別にガシャデータを管理するようになった（中国語繁体字版と韓国語版は統合してもいいかもしれないが、これからを考えて分離）。
 - ピックアップ名を比較して、最新のガシャデータがある場合はダウンロードしなくなった。
 - 変数が減ってしまった。そのかわり巨大なリストが誕生した。
 - 一部翻訳を追加した。
 - コンソール画面にてタイムスタンプが表示されるようになった（printでタイムスタンプ表記を追加した）。
+### v2.0.1
+- ピックアップ表示順をレア度の高い順になっていなかったのでレア度の高い順にしました。
+- リリースには出してませんし、内部バージョン表記は2.0.0のままです。
 
 ## Info  
 - Chinese gacha data and Korean gacha data are compatible. But Japanese gacha data and these gacha data are not compatible.  

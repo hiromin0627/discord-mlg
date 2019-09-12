@@ -147,7 +147,8 @@ async def on_message(message):
             langint = langtoint()
 
         name = ''
-        for n in range(3,6):
+        pickup_listnum = [5,4,3]
+        for n in pickup_listnum:
             for val in mlg_data[langint][n]:
                 lim = _('限定') if val[6] == 3 else ''
                 name += '［' + lim + rarity_str[val[5]] + '］' + val[1] + ' ' + val[0] + '\n'
@@ -297,7 +298,8 @@ async def on_message(message):
             pickup_alllist = list()
 
             name = ''
-            for n in range(3,6):
+            pickup_listnum = [5,4,3]
+            for n in pickup_listnum:
                 for val in mlg_data[langint][n]:
                     lim = _('限定') if val[6] == 3 else ''
                     pickup_alllist.append(val)
