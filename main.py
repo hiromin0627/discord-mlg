@@ -55,6 +55,7 @@ mlg_data = [[[],[],[],[],[],[]],[[],[],[],[],[],[]],[[],[],[],[],[],[]]]
 pickup_name = ['','','']
 rarity_str = ['R','SR','SSR','FES']
 langnamelist = ['ja','cn','kr']
+pickup_img = ['https://dl.dropboxusercontent.com/s/iet6ow2jt3zeil9/pickup_img.jpg','https://dl.dropboxusercontent.com/s/wgxhn9hbfnetet6/pickup_img_cn.png','https://dl.dropboxusercontent.com/s/hv76pgne8ykxdna/pickup_img_kr.png']
 
 timer = 0
 
@@ -154,6 +155,7 @@ async def on_message(message):
                 name += '［' + lim + rarity_str[val[5]] + '］' + val[1] + ' ' + val[0] + '\n'
 
         emb = discord.Embed(title=_('現在のミリシタガシャピックアップはこちらです！！'), description=name)
+        emb.set_image(url=pickup_img[langint])
         emb.set_author(name=pickup_name[langint])
         await message.channel.send('', embed=emb)
     elif message.content.startswith(prefix + 'call'):
@@ -181,11 +183,11 @@ async def on_message(message):
         except:
             pass
 
-        if _('制服シリーズ') in message.content[6:]:
+        if '制服シリーズ' in message.content[6:]:
             for data in imas.million_data:
                 if data[0] in message.content[6:]:
                     for r,val in enumerate(mlg_all[langint]):
-                        if val[0] in message.content[6:] and val[1] == _('制服シリーズ'):
+                        if val[0] in message.content[6:] and val[1] == '制服シリーズ':
                             if char_list[r] == '1':
                                 carddata = val
             if len(carddata) == 0:
@@ -193,11 +195,11 @@ async def on_message(message):
                 await asyncio.sleep(10)
                 await msgn.delete()
                 return
-        elif _('シアターデイズ') in message.content[6:]:
+        elif 'シアターデイズ' in message.content[6:] or '劇場時光' in message.content[6:] or '시어터 데이즈' in message.content[6:]:
             for data in imas.million_data:
                 if data[0] in message.content[6:]:
                     for r,val in enumerate(mlg_all[langint]):
-                        if val[0] in message.content[6:] and val[1] == _('シアターデイズ'):
+                        if val[0] in message.content[6:] and (val[1] == 'シアターデイズ' or val[1] == '劇場時光' or val[1] == '시어터 데이즈'):
                             if char_list[r] == '1':
                                 carddata = val
             if len(carddata) == 0:
