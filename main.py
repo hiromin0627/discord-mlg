@@ -1,6 +1,6 @@
 #coding: utf-8
 #created by @hiromin0627
-#MilliShita Gacha 2.0.0
+#MilliShita Gacha 2.1.0
 
 import glob
 import gettext
@@ -35,7 +35,6 @@ translater.install()
 
 token = ini['tokens']['token']
 
-vc_id = int(ini['ids']['vc'])
 bgm_id = int(ini['ids']['bgm-room'])
 log_id = int(ini['ids']['log-room'])
 
@@ -61,7 +60,7 @@ timer = 0
 
 @client.event
 async def on_ready():
-    print(strtimestamp() + '---MilliShita Gacha v2.0.0---')
+    print(strtimestamp() + '---MilliShita Gacha v2.1.0---')
     print(strtimestamp() + 'discord.py ver:' + discord.__version__)
     print(strtimestamp() + 'Logged in as ' + client.user.name + '(ID:' + str(client.user.id) + ')')
     print(strtimestamp() + 'Bot created by @hiromin0627')
@@ -76,7 +75,7 @@ async def on_message(message):
         await message.delete()
         print(strtimestamp() + 'Start MLhelp')
         if lang == 'ja':
-            msg = await message.channel.send('ミリシタガシャシミュレーターDiscordボット v2.0.0\n' +\
+            msg = await message.channel.send('ミリシタガシャシミュレーターDiscordボット v2.1.0\n' +\
                 prefix + 'help：ヘルプコマンドです。ミリシタガシャの説明を見ることができます。\n' +\
                 prefix + 'reload：ミリシタガシャデータベースをダウンロードして更新します。\n' +\
                 prefix + 'reset：全ユーザーのMLガシャを引いた回数をリセットします。\n' +\
@@ -85,7 +84,7 @@ async def on_message(message):
                 prefix + 'call：MLガシャで引いたカード画像を検索できます。スペースを挟んでカード名を入力してください。（制服シリーズはアイドル名も記入）\n' +\
                 prefix + 'ガシャ or ' + prefix + 'gacha：ミリシタガシャシミュレーターができます。10を後に入力すると、10連ガシャになります。')
         elif lang == 'cn':
-            msg = await message.channel.send('劇場時光轉蛋模擬器Discord Bot v2.0.0\n' +\
+            msg = await message.channel.send('劇場時光轉蛋模擬器Discord Bot v2.1.0\n' +\
                 prefix + 'help：This command.\n' +\
                 prefix + 'reload：Download latest MLG database.\n' +\
                 prefix + 'reset：Reset all users gacha count.\n' +\
@@ -94,7 +93,7 @@ async def on_message(message):
                 prefix + 'call：Check card you have to type card name.\n' +\
                 prefix + '轉蛋 or ' + prefix + 'gacha：Play MLTD Gacha Simulator. Type "10" after this command, play it 10 times in a row.')
         elif lang == 'kr':
-            msg = await message.channel.send('밀리언 라이브! 시어터 데이즈 촬영 시뮬레이터 Discord Bot v2.0.0\n' +\
+            msg = await message.channel.send('밀리언 라이브! 시어터 데이즈 촬영 시뮬레이터 Discord Bot v2.1.0\n' +\
                 prefix + 'help：This command.\n' +\
                 prefix + 'reload：Download latest MLG database.\n' +\
                 prefix + 'reset：Reset all users gacha count.\n' +\
@@ -103,7 +102,7 @@ async def on_message(message):
                 prefix + 'call：Check card you have to type card name.\n' +\
                 prefix + '촬영 or ' + prefix + 'gacha：Play MLTD Gacha Simulator. Type "10" after this command, play it 10 times in a row.')
         else:
-            msg = await message.channel.send('Million Live! Theater Days Gacha Simulator Discord Bot v2.0.0\n' +\
+            msg = await message.channel.send('Million Live! Theater Days Gacha Simulator Discord Bot v2.1.0\n' +\
                 prefix + 'help：This command.\n' +\
                 prefix + 'reload：Download latest MLG database.\n' +\
                 prefix + 'reset：Reset all users gacha count.\n' +\
@@ -257,10 +256,16 @@ async def on_message(message):
                 return
     elif message.content.startswith(prefix + "ガシャ") or message.content.startswith(prefix + "gacha") or message.content.startswith(prefix + "轉蛋") or message.content.startswith(prefix + "촬영"):
         await message.delete()
+
+        try:
+            vc_id = message.author.voice.channel.id
+            channel = client.get_channel(vc_id)
+        except:
+            vc_id = None
         
         try:
             if client.voice_clients[0] is not None:
-                msgn = await message.channel.send(_('他のユーザーがプレイ中です。終了とクールタイムまでお待ちください。'))
+                msgn = await message.channel.send(_('他のユーザーがプレイ中です。終了までお待ちください。'))
                 await asyncio.sleep(10)
                 await msgn.delete()
                 return
@@ -369,11 +374,14 @@ async def on_message(message):
 
             print(strtimestamp() + 'Start MLChange[' + kind + '] by ' + str(author.id) + '.')
 
-            if not 'SILENT' in message.content.upper() or not 'サイレント' in message.content:
-                vc = await channel.connect()
+            if vc_id == None:
+                vc = None
+                botmsg = None
+            else:
                 if not bgm_id == 0:
                     toBot = client.get_channel(bgm_id)
-                    await toBot.send('MLGstart')
+                    botmsg = await toBot.send('ML' + str(vc_id))
+                vc = await channel.connect()
 
             await asyncio.sleep(0.7)
             msg = await message.channel.send(author.mention + ' https://i.imgur.com/da2w9YS.gif')
@@ -398,7 +406,7 @@ async def on_message(message):
                 newlistline = ''.join(char_list)
                 f.write(newlistline)
 
-            await mlg_touch(msg,message,result,img,author,kind,vc,20,0)
+            await mlg_touch(msg,message,result,img,author,kind,vc,20,0,botmsg)
 
             if vc.is_connected():
                 while vc.is_playing():
@@ -532,19 +540,23 @@ async def on_message(message):
         elif mess <= 4 and (sr_flag == 1 or ssr_flag == 1 or fes_flag == 1): phrase = _('みんなのいい表情が撮れました！')
         elif mess > 4 and mess <= 8 and (sr_flag == 1 or ssr_flag == 1 or fes_flag == 1): phrase = _('楽しそうなところが撮れましたよ')
 
-        if not 'SILENT' in message.content.upper() or not 'サイレント' in message.content:
-            vc = await channel.connect()
-
+        if vc_id == None:
+            vc = None
+            botmsg = None
+            camera = await message.channel.send(phrase)
+            await asyncio.sleep(3)
+            await camera.delete()
+        else:
             if not len(phrase) == 0:
                 vc.play(discord.FFmpegPCMAudio('./resources/message.mp3'))
                 camera = await message.channel.send(phrase)
                 while vc.is_playing():
-                    await asyncio.sleep(3)
+                    await asyncio.sleep(1)
                 await camera.delete()
-
             if not bgm_id == 0:
                 toBot = client.get_channel(bgm_id)
-                await toBot.send('MLGstart')
+                botmsg = await toBot.send('ML' + str(vc_id))
+            vc = await channel.connect()
 
         waitemb = discord.Embed()
 
@@ -557,7 +569,7 @@ async def on_message(message):
         msg = await message.channel.send(message.author.mention, embed=waitemb)
         await msg.add_reaction('👆')
 
-        await mlg_touch(msg,message,result,img,author,pickup_name[langint],vc,pink_flag,fes_flag)
+        await mlg_touch(msg,message,result,img,author,pickup_name[langint],vc,pink_flag,fes_flag,botmsg)
             
         if vc.is_connected():
             while vc.is_playing():
@@ -666,16 +678,7 @@ async def gacha_reload(flag,message):
     print(strtimestamp() + 'All MLreload process completed successfully.')
     print(strtimestamp() + '-----------------------------------------')
 
-    await reload_timer(60)
     return
-
-async def reload_timer(time):
-    global timer
-    timer = time
-    while timer > 0:
-        timer -= 1
-        await asyncio.sleep(2)
-    return timer
 
 async def gacha_note(message):
     char_list = list()
@@ -784,7 +787,7 @@ async def gacha_note(message):
             await msg.delete()
             break
 
-async def mlg_touch(msg,message,result,img,author,kind,vc,pink_flag,fes_flag):
+async def mlg_touch(msg,message,result,img,author,kind,vc,pink_flag,fes_flag,botmsg):
     langint = 0
     if not message.content[7:] == '':
         if 'ja' in message.content[6:]:
@@ -795,6 +798,7 @@ async def mlg_touch(msg,message,result,img,author,kind,vc,pink_flag,fes_flag):
             langint = 2
     else:
         langint = langtoint()
+
     try:
         log = ''
         count = 0
@@ -879,9 +883,8 @@ async def mlg_touch(msg,message,result,img,author,kind,vc,pink_flag,fes_flag):
                     if count == len(result):
                         if vc.is_connected():
                             if not bgm_id == 0:
-                                toBot = client.get_channel(bgm_id)
-                                await toBot.send('disconnect')
-                        await vc.disconnect()
+                                await botmsg.add_reaction('⏹')
+                            await vc.disconnect()
                         await msg.clear_reactions()
                         await msg.delete()
 
@@ -970,8 +973,7 @@ async def mlg_touch(msg,message,result,img,author,kind,vc,pink_flag,fes_flag):
 
                     if vc.is_connected():
                         if not bgm_id == 0:
-                            toBot = client.get_channel(bgm_id)
-                            await toBot.send('disconnect')
+                            await botmsg.add_reaction('⏹')
                         await vc.disconnect()
 
                     gacha_count = str()
@@ -996,8 +998,7 @@ async def mlg_touch(msg,message,result,img,author,kind,vc,pink_flag,fes_flag):
         if vc.is_connected():
             await vc.disconnect()
         if not bgm_id == 0:
-            toBot = client.get_channel(bgm_id)
-            await toBot.send('disconnect')
+            await botmsg.add_reaction('⏹')
         await message.channel.send(_('しばらく操作がなかったため、タイムアウトしました。'))
     """ except:
         import traceback
