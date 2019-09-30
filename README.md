@@ -2,32 +2,44 @@
 PythonベースのDiscord用ボットのアイドルマスターミリオンライブシアターデイズのガシャシミュレーターです。  
 現状、Discord.pyが音声を二重再生させることができない（わからない）ため、BGMを鳴らす場合は2つのボットを作成する必要がある。  
 
-# for MLG v2.2.0 newer users
-You need to prepare the MLG data yourself after MLG v2.2.0. Please download MLG data from my dropbox.  
-（v2.2.0以降は以下のリンクからMLGデータベースを手動でダウンロード、更新してください！）  
-<span style="font-size: 200%">[DOWNLOAD MLG DATA](https://www.dropbox.com/sh/dph3omqrb0mn1y2/AAARp4G9iI6PaqmAYYGrW17xa?dl=0)</span>  
-Data is **placed in the “gacha_data”** directory.  
-（**「gacha_data」**フォルダにダウンロードしたデータを**展開**してください。）  
-![Imgur](https://i.imgur.com/6bbbiVE.png)
+# MLG v2.2.0より新しいボットを使っている方へ
+v2.2.0以降は以下のリンクからMLGデータベースを手動でダウンロード、更新してください！  
+[DOWNLOAD MLG DATA](https://www.dropbox.com/sh/dph3omqrb0mn1y2/AAARp4G9iI6PaqmAYYGrW17xa?dl=0)  
+**「gacha_data」**フォルダにダウンロードしたデータを**展開**してください。 
+![Imgur](https://i.imgur.com/6bbbiVE.png)  
   
-## 遊び方(How to play)
-Type "MLgacha" or "MLガシャ" or "ML轉蛋" or "ML촬영" to play Million Live! Theater Days gacha.  
-Add "10" (ex."MLgacha10") to play it for 10 times(10連ガシャ).
-"ML" is prefix. So you can change at "config.ini".  
+データベースの内容はこちらのWikiページを確認してください  
+[Gacha data description](https://github.com/hiromin0627/discord-mlg/wiki/Gacha-data-description)  
   
-### コマンド(Commands)
-- MLガシャ or MLgacha or ML轉蛋 or ML촬영 : Play IDOLM@STER Million Live! Theater Days gacha simulator.  
-- MLreload : Download latest database.  
-- MLreset : Clear users play count data.  
-- MLcard : Check cards you have.  
-- MLpickup : Check pickup cards.  
-- MLcall : Check your cards for type card name(only you have).  
+## 導入方法
+1. Python 3.7以降を導入してください。
+1. 最新版のdiscord.py（v1.0.0以降）をインストールしてください。
+1. ffmpegを導入し、PATHも通してください。
+1. Discordのデベロッパーサイトからトークンを入手してください。
+1. discord-mlgのconfig.iniにトークンとテキストチャンネルID（ガシャ結果ログ出力用）を入力してください。
+    1. BGMも使う場合は、トークン（BGMボット用）とテキストチャンネルID（Bot同士の会話用）を用意、入力してください。
+1. main.pyをPythonで起動します（Windowsだったらrun.batファイルを使用できます）。
+    1. BGMを使用するならば、bgm.pyを起動します（Windowsならrun_bgm.batが使用できます）。
+1. 素敵なガシャライフを！
+
+## 遊び方
+- 「MLガシャ」または「MLgacha」、「ML轉蛋」、「ML촬영」と入力するとミリシタのガシャを引くことができます。  
+- 「MLガシャ10」または「MLgacha10」、「ML轉蛋10」、「ML촬영10」のように入力すると10連ガシャになります。
+- 先頭語の「ML」はConfig.iniで変更できます。
   
-### Options for MLgacha  
-- Add '10' for 'MLgacha' command, 'MLgacha10' for example. You can play MLG for 10 times(「MLガシャ10」コマンドに「10」を追加すると10連ガシャがプレイできます).  
-- Add 'ja' or 'cn' or 'kr' for 'MLgacha' command, 'MLgachaja' for example. You can play other country MLG(「MLガシャ」コマンドに「ja」か「cn」か「kr」を追加すると他の国のガシャをプレイできます).
-- 'ja' is Japanese, 'cn' is Chinese, and 'kr' is Korean(「ja」が日本語、「cn」が中国語繁体字、「kr」が韓国語です).
-- Can be used together '10' and 'ja' or 'cn' or 'kr'. For example, 'MLgahca10cn'(これらのオプションは「MLガシャ10cn」のように併用可能です).
+## コマンド
+- MLガシャ or MLgacha or ML轉蛋 or ML촬영 : ミリシタのガシャを引くことができます。 
+- MLreload : ミリシタガシャのデータを変更した際、起動中にデータを入れ替えることができます。  
+- MLreset : 全ユーザーのガシャのカウント（ドリームスター）の数をリセットできます。
+- MLcard : ユーザーの持っているカードリストを確認できます。
+- MLpickup : 現在のピックアップカードを確認できます。「cn」や「kr」などを言語省略語を入れると別の言語のガシャピックアップカードを確認できます。
+- MLcall : カード名を入力することによってカード絵を確認できます。ただし、「シアターデイズ」と「制服シリーズ」はアイドル名も必要です。
+  
+### MLガシャのコマンドオプション  
+- 「MLガシャ10」コマンドに「10」を追加すると10連ガシャがプレイできます。  
+- 「MLガシャ」コマンドに「ja」か「cn」か「kr」を追加すると他の国のガシャをプレイできます（v2.0.0以降）。
+- 「ja」が日本語、「cn」が中国語繁体字、「kr」が韓国語です。
+- これらのオプションは「MLガシャ10cn」のように併用可能です。
   
 ## What is new in MLG v2.0.0
 - Config.iniの言語設定にかかわらず、別の国のガシャを引くことができるようになった。
@@ -46,9 +58,13 @@ Add "10" (ex."MLgacha10") to play it for 10 times(10連ガシャ).
 - データベースをダウンロードする形式を**廃止**しました。
 - データベースは[こちらのDropbox](https://www.dropbox.com/sh/dph3omqrb0mn1y2/AAARp4G9iI6PaqmAYYGrW17xa?dl=0)からダウンロードする形式にしました。
 - ピックアップ確認時の画像を廃止しました。
+### v2.2.1
+- リロード時の文言を変更（完了時のメッセージの変更・完了時のピックアップカードの埋め込みにて限定の文字をローカライズ化）
+- そもそも翻訳するだろうし結局READMEを日本語化
 
-## Info  
-- Chinese gacha data and Korean gacha data are compatible. But Japanese gacha data and these gacha data are not compatible.  
+## 中国語繁体字版と韓国語版の記録データの互換性  
+- 中国語繁体字版と韓国語版の記録データには互換性があります。
+- ただし日本語版と中国語繁体字版と韓国語版の記録データには互換性がありませんので注意してください。
   
 ## 予定
 - numpyを使用してリストの高速化を図れたらと思っている（インストール必須だからどうか考えてる）

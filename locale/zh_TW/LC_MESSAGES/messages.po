@@ -29,7 +29,7 @@ msgstr "すべてのユーザーのガチャカウントをリセットしまし
 
 #: ./main.py:148 ./main.py:256
 msgid "限定"
-msgstr "限量"
+msgstr "限定"
 
 #: ./main.py:151
 msgid "現在のミリシタガシャピックアップはこちらです！！"

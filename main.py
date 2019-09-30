@@ -1,7 +1,7 @@
 #coding: utf-8
 #created by @hiromin0627
-#MilliShita Gacha 2.2.0
-mlgbotver = '2.2.0'
+#MilliShita Gacha 2.2.1
+mlgbotver = '2.2.1'
 
 import glob
 import gettext
@@ -645,7 +645,7 @@ async def gacha_reload(flag,message):
         print(strtimestamp() + 'Pickup cards')
         for n in range(3,6):
             for val in mlg_data[langint][n]:
-                lim = 'Limited ' if val[6] == 3 else ''
+                lim = _('限定') if val[6] == 3 else ''
                 print(strtimestamp() + '[' + lim + rarity_str[val[5]] + ']' + val[1] + ' ' + val[0])
                 name[langint] += '［' + lim + rarity_str[val[5]] + '］' + val[1] + ' ' + val[0] + '\n'
 
@@ -654,9 +654,7 @@ async def gacha_reload(flag,message):
         emb.add_field(name='Chinese MLG data "' + pickup_name[1] + '"', value=name[1])
         emb.add_field(name='Korean MLG data "' + pickup_name[2] + '"', value=name[2])
 
-        if flag == 1: await msg.edit(content='Loaded ' + str(len(mlg_all[langint])) + ' cards. ([FES]' + str(fescount) + ', [SSR]' + str(ssrcount) + ', [SR]' + str(srcount) + ', [R]' + str(rcount) + ') ' +\
-            fesmode + '\n' +\
-            'All MLreload process completed successfully.', embed=emb)
+        if flag == 1: await msg.edit(content='All MLreload process completed successfully.', embed=emb)
 
     print(strtimestamp() + 'All MLreload process completed successfully.')
     print(strtimestamp() + '-----------------------------------------')
