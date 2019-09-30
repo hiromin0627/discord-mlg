@@ -1,6 +1,14 @@
 # discord-mlg
 PythonベースのDiscord用ボットのアイドルマスターミリオンライブシアターデイズのガシャシミュレーターです。  
 現状、Discord.pyが音声を二重再生させることができない（わからない）ため、BGMを鳴らす場合は2つのボットを作成する必要がある。  
+
+# for MLG v2.2.0 newer users
+You need to prepare the MLG data yourself after MLG v2.2.0. Please download MLG data from my dropbox.  
+（v2.2.0以降は以下のリンクからMLGデータベースを手動でダウンロード、更新してください！）  
+<span style="font-size: 200%">[DOWNLOAD MLG DATA](https://www.dropbox.com/sh/dph3omqrb0mn1y2/AAARp4G9iI6PaqmAYYGrW17xa?dl=0)</span>  
+Data is **placed in the “gacha_data”** directory.  
+（**「gacha_data」**フォルダにダウンロードしたデータを**展開**してください。）  
+[Imgur](https://imgur.com/6bbbiVE)
   
 ## 遊び方(How to play)
 Type "MLgacha" or "MLガシャ" or "ML轉蛋" or "ML촬영" to play Million Live! Theater Days gacha.  
@@ -31,6 +39,13 @@ Add "10" (ex."MLgacha10") to play it for 10 times(10連ガシャ).
 ### v2.0.1
 - ピックアップ表示順をレア度の高い順になっていなかったのでレア度の高い順にしました。
 - リリースには出してませんし、内部バージョン表記は2.0.0のままです。
+### v2.1.0
+- MLガシャを実行したユーザーがいるボイスチャンネルにボットが接続するようになりました。
+- configでボイスチャンネルのIDを打つ必要がなくなりました。
+### v2.2.0
+- データベースをダウンロードする形式を**廃止**しました。
+- データベースは[こちらのDropbox](https://www.dropbox.com/sh/dph3omqrb0mn1y2/AAARp4G9iI6PaqmAYYGrW17xa?dl=0)からダウンロードする形式にしました。
+- ピックアップ確認時の画像を廃止しました。
 
 ## Info  
 - Chinese gacha data and Korean gacha data are compatible. But Japanese gacha data and these gacha data are not compatible.  

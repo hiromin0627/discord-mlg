@@ -1,6 +1,7 @@
 #coding: utf-8
 #created by @hiromin0627
-#MilliShita Gacha 2.1.0
+#MilliShita Gacha 2.2.0
+mlgbotver = '2.2.0'
 
 import glob
 import gettext
@@ -54,13 +55,12 @@ mlg_data = [[[],[],[],[],[],[]],[[],[],[],[],[],[]],[[],[],[],[],[],[]]]
 pickup_name = ['','','']
 rarity_str = ['R','SR','SSR','FES']
 langnamelist = ['ja','cn','kr']
-pickup_img = ['https://dl.dropboxusercontent.com/s/iet6ow2jt3zeil9/pickup_img.jpg','https://dl.dropboxusercontent.com/s/wgxhn9hbfnetet6/pickup_img_cn.png','https://dl.dropboxusercontent.com/s/hv76pgne8ykxdna/pickup_img_kr.png']
 
 timer = 0
 
 @client.event
 async def on_ready():
-    print(strtimestamp() + '---MilliShita Gacha v2.1.0---')
+    print(strtimestamp() + '---MilliShita Gacha ' + mlgbotver + '---')
     print(strtimestamp() + 'discord.py ver:' + discord.__version__)
     print(strtimestamp() + 'Logged in as ' + client.user.name + '(ID:' + str(client.user.id) + ')')
     print(strtimestamp() + 'Bot created by @hiromin0627')
@@ -75,36 +75,36 @@ async def on_message(message):
         await message.delete()
         print(strtimestamp() + 'Start MLhelp')
         if lang == 'ja':
-            msg = await message.channel.send('ミリシタガシャシミュレーターDiscordボット v2.1.0\n' +\
+            msg = await message.channel.send('ミリシタガシャシミュレーターDiscordボット ' + mlgbotver + '\n' +\
                 prefix + 'help：ヘルプコマンドです。ミリシタガシャの説明を見ることができます。\n' +\
-                prefix + 'reload：ミリシタガシャデータベースをダウンロードして更新します。\n' +\
+                prefix + 'reload：ミリシタガシャデータベースを更新します。\n' +\
                 prefix + 'reset：全ユーザーのMLガシャを引いた回数をリセットします。\n' +\
                 prefix + 'cards：MLガシャで引いたカード名を確認することができます。\n' +\
                 prefix + 'pickup：現在のガシャ名とピックアップカードを確認できます。\n' +\
                 prefix + 'call：MLガシャで引いたカード画像を検索できます。スペースを挟んでカード名を入力してください。（制服シリーズはアイドル名も記入）\n' +\
                 prefix + 'ガシャ or ' + prefix + 'gacha：ミリシタガシャシミュレーターができます。10を後に入力すると、10連ガシャになります。')
         elif lang == 'cn':
-            msg = await message.channel.send('劇場時光轉蛋模擬器Discord Bot v2.1.0\n' +\
+            msg = await message.channel.send('劇場時光轉蛋模擬器Discord Bot ' + mlgbotver + '\n' +\
                 prefix + 'help：This command.\n' +\
-                prefix + 'reload：Download latest MLG database.\n' +\
+                prefix + 'reload：Update MLG database.\n' +\
                 prefix + 'reset：Reset all users gacha count.\n' +\
                 prefix + 'cards：Check cards you have.\n' +\
                 prefix + 'pickup：Check pickup cards.\n' +\
                 prefix + 'call：Check card you have to type card name.\n' +\
                 prefix + '轉蛋 or ' + prefix + 'gacha：Play MLTD Gacha Simulator. Type "10" after this command, play it 10 times in a row.')
         elif lang == 'kr':
-            msg = await message.channel.send('밀리언 라이브! 시어터 데이즈 촬영 시뮬레이터 Discord Bot v2.1.0\n' +\
+            msg = await message.channel.send('밀리언 라이브! 시어터 데이즈 촬영 시뮬레이터 Discord Bot ' + mlgbotver + '\n' +\
                 prefix + 'help：This command.\n' +\
-                prefix + 'reload：Download latest MLG database.\n' +\
+                prefix + 'reload：Update MLG database.\n' +\
                 prefix + 'reset：Reset all users gacha count.\n' +\
                 prefix + 'cards：Check cards you have.\n' +\
                 prefix + 'pickup：Check pickup cards.\n' +\
                 prefix + 'call：Check card you have to type card name.\n' +\
                 prefix + '촬영 or ' + prefix + 'gacha：Play MLTD Gacha Simulator. Type "10" after this command, play it 10 times in a row.')
         else:
-            msg = await message.channel.send('Million Live! Theater Days Gacha Simulator Discord Bot v2.1.0\n' +\
+            msg = await message.channel.send('Million Live! Theater Days Gacha Simulator Discord Bot ' + mlgbotver + '\n' +\
                 prefix + 'help：This command.\n' +\
-                prefix + 'reload：Download latest MLG database.\n' +\
+                prefix + 'reload：Update MLG database.\n' +\
                 prefix + 'reset：Reset all users gacha count.\n' +\
                 prefix + 'cards：Check cards you have.\n' +\
                 prefix + 'pickup：Check pickup cards.\n' +\
@@ -154,7 +154,6 @@ async def on_message(message):
                 name += '［' + lim + rarity_str[val[5]] + '］' + val[1] + ' ' + val[0] + '\n'
 
         emb = discord.Embed(title=_('現在のミリシタガシャピックアップはこちらです！！'), description=name)
-        emb.set_image(url=pickup_img[langint])
         emb.set_author(name=pickup_name[langint])
         await message.channel.send('', embed=emb)
     elif message.content.startswith(prefix + 'call'):
@@ -577,12 +576,8 @@ async def on_message(message):
 
 async def gacha_reload(flag,message):
     global mlg_all, mlg_data
-    print(strtimestamp() + '----------[MLG v2.0.0 MLreload]----------')
+    print(strtimestamp() + '----------[MLG ' + mlgbotver + ' MLreload]----------')
     if flag == 1: msg = await message.channel.send('MLreload Start.')
-
-    if flag == 1: await msg.edit(content='Checking update.')
-    url1 = ['https://dl.dropboxusercontent.com/s/tzefjf3bkzft6kk/mlg_all.csv','https://dl.dropboxusercontent.com/s/mirwbbfujj9y7t8/mlg_all_cn.csv','https://dl.dropboxusercontent.com/s/qgo5tjm3qbb3tdo/mlg_all_kr.csv']
-    url2 = ['https://dl.dropboxusercontent.com/s/xktk86nhgcvu7ax/pickup_name.txt','https://dl.dropboxusercontent.com/s/34v5er4l4drczxy/pickup_name_cn.txt','https://dl.dropboxusercontent.com/s/ae5zzjb2wgsodkt/pickup_name_kr.txt']
     
     mlg_all = [[],[],[]]
     mlg_data = [[[],[],[],[],[],[]],[[],[],[],[],[],[]],[[],[],[],[],[],[]]]
@@ -592,70 +587,58 @@ async def gacha_reload(flag,message):
 
     for langint,langname in enumerate(langnamelist):
         print(strtimestamp() + '[Step ' + str(langint + 1) + '/3 (lang:' + langname + ')]')
-        request.urlretrieve(url2[langint],'./gacha_data/pickup_name_temp.txt')
-        print(strtimestamp() + 'Checking new MLG data...')
-        if flag == 1: await msg.edit(content='Checking new MLG data...')
-
-        try:
-            with open('./gacha_data/pickup_name_temp.txt', 'r',encoding="utf-8_sig") as f:
-                new_pickup_name = f.read()
-        except:
-            new_pickup_name = 'gacha_name_new'
-        try:
-            with open('./gacha_data/pickup_name_' + langname + '.txt', 'r',encoding="utf-8_sig") as f:
-                old_pickup_name = f.read()
-        except:
-            old_pickup_name = 'gacha_name_old'
-        os.remove('./gacha_data/pickup_name_temp.txt')
-
-        if not old_pickup_name == new_pickup_name:
-            print(strtimestamp() + 'New data availabile. Start new MLG data.')
-            request.urlretrieve(url1[langint],'./gacha_data/mlg_all_' + langname + '.csv')
-            print(strtimestamp() + 'MLG data "mlg_all_' + langname + '.csv" Downloaded.')
-            if flag == 1: await msg.edit(content='MLG data "mlg_all_' + langname + '.csv" Downloaded.')
-            request.urlretrieve(url2[langint],'./gacha_data/pickup_name_' + langname + '.txt')
-            print(strtimestamp() + 'MLG data "pickup_name_' + langname + '.txt" Downloaded.')
-            if flag == 1: await msg.edit(content='MLG data "mlg_all_' + langname + '.csv" Downloaded.')
-        else:
-            print(strtimestamp() + 'Local data is latest. Continue loading data.')
         
-        with open('./gacha_data/pickup_name_' + langname + '.txt',encoding="utf-8_sig") as f:
-            pickup_name[langint] = f.read()
+        try:
+            with open('./gacha_data/pickup_name_' + langname + '.txt',encoding="utf-8_sig") as f:
+                pickup_name[langint] = f.read()
+        except:
+            print(strtimestamp() + langname + ' pickup name data is not available.')
+            if flag == 1: await msg.edit(content=langname + ' pickup name data is not available. Skip to next language.')
+            name[langint] = 'Data unavailable. You can`t use this language mlg.'
+            pickup_name[langint] = 'No data'
+            return
 
         fescount = 0
         ssrcount = 0
         srcount = 0
         rcount = 0
-        with open('./gacha_data/mlg_all_' + langname + '.csv',encoding="utf-8_sig") as f:
-            reader = csv.reader(f)
-            for row in reader:
-                indata = [row[3],str(row[4]),row[5],row[6],str(row[7]),int(row[2]),int(row[1]),int(row[0])]
-                mlg_all[langint].insert(0, indata)
-                fesmode = 'FES mode unavailable.'
+        try:
+            with open('./gacha_data/mlg_all_' + langname + '.csv',encoding="utf-8_sig") as f:
+                reader = csv.reader(f)
+                for row in reader:
+                    indata = [row[3],str(row[4]),row[5],row[6],str(row[7]),int(row[2]),int(row[1]),int(row[0])]
+                    mlg_all[langint].insert(0, indata)
+                    fesmode = 'FES mode unavailable.'
 
-                if indata[5] == 3:
-                    fescount += 1
-                    if indata[6] >= 2:
-                        fesmode = 'FES mode AVAILABLE.'
-                        mlg_data[langint][5].append(indata)
-                elif indata[5] == 2 and not int(row[1]) == 0:
-                    ssrcount += 1
-                    if indata[6] >= 2:
-                        mlg_data[langint][5].append(indata)
-                    else:
-                        mlg_data[langint][2].insert(0, indata)
-                elif indata[5] == 1 and not int(row[1]) == 0:
-                    srcount += 1
-                    if indata[6] >= 2:
-                        mlg_data[langint][4].append(indata)
-                    else:
-                        mlg_data[langint][1].insert(0, indata)
-                elif indata[5] == 0:
-                    rcount += 1
-                    if indata[6] >= 2:
-                        mlg_data[langint][3].append(indata)
-                    else:
-                        mlg_data[langint][0].insert(0, indata)
+                    if indata[5] == 3:
+                        fescount += 1
+                        if indata[6] >= 2:
+                            fesmode = 'FES mode AVAILABLE.'
+                            mlg_data[langint][5].append(indata)
+                    elif indata[5] == 2 and not int(row[1]) == 0:
+                        ssrcount += 1
+                        if indata[6] >= 2:
+                            mlg_data[langint][5].append(indata)
+                        else:
+                            mlg_data[langint][2].insert(0, indata)
+                    elif indata[5] == 1 and not int(row[1]) == 0:
+                        srcount += 1
+                        if indata[6] >= 2:
+                            mlg_data[langint][4].append(indata)
+                        else:
+                            mlg_data[langint][1].insert(0, indata)
+                    elif indata[5] == 0:
+                        rcount += 1
+                        if indata[6] >= 2:
+                            mlg_data[langint][3].append(indata)
+                        else:
+                            mlg_data[langint][0].insert(0, indata)
+        except:
+            print(strtimestamp() + langname + ' pickup name data is not available.')
+            if flag == 1: await msg.edit(content=langname + ' pickup name data is not available. Skip to next language.')
+            name[langint] = 'Data unavailable. You can`t use this language mlg.'
+            pickup_name[langint] = 'No data'
+            return
 
         print(strtimestamp() + 'Loaded ' + str(len(mlg_all[langint])) + ' cards.([FES]' + str(fescount) + ', [SSR]' + str(ssrcount) + ', [SR]' + str(srcount) + ', [R]' + str(rcount) + ')')
         print(strtimestamp() + 'Pickup name is 「' + pickup_name[langint] + '」 ' + fesmode)
