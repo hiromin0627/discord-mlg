@@ -8,7 +8,7 @@ You need to prepare the MLG data yourself after MLG v2.2.0. Please download MLG 
 <span style="font-size: 200%">[DOWNLOAD MLG DATA](https://www.dropbox.com/sh/dph3omqrb0mn1y2/AAARp4G9iI6PaqmAYYGrW17xa?dl=0)</span>  
 Data is **placed in the “gacha_data”** directory.  
 （**「gacha_data」**フォルダにダウンロードしたデータを**展開**してください。）  
-![Imgur](https://imgur.com/6bbbiVE)
+![Imgur](https://i.imgur.com/6bbbiVE.png)
   
 ## 遊び方(How to play)
 Type "MLgacha" or "MLガシャ" or "ML轉蛋" or "ML촬영" to play Million Live! Theater Days gacha.  
