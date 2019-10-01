@@ -1,7 +1,7 @@
 #coding: utf-8
 #created by @hiromin0627
-#MilliShita Gacha 2.2.1
-mlgbotver = '2.2.1'
+#MilliShita Gacha 2.2.2
+mlgbotver = '2.2.2'
 
 import glob
 import gettext
@@ -42,12 +42,9 @@ log_id = int(ini['ids']['log-room'])
 prefix = ini['Prefix']['commandprefix']
 
 timeout = float(ini['Reaction']['timeout'])
+aftermsgdel = ini['Reaction']['aftermsgdel']
 
 client = discord.Client()
-
-#mlg_data = [[[rlist],[srlist],[ssrlist],[rpicklist],[srpicklist],[ssrpicklist]],/ #日本データ mlg_data[0]
-# [[rlist],[srlist],[ssrlist],[rpicklist],[srpicklist],[ssrpicklist]],/            #中国データ mlg_data[1]
-# [[rlist],[srlist],[ssrlist],[rpicklist],[srpicklist],[ssrpicklist]]]             #韓国データ mlg_data[2]
 
 mlg_all = [[],[],[]]
 mlg_data = [[[],[],[],[],[],[]],[[],[],[],[],[],[]],[[],[],[],[],[],[]]]
@@ -71,48 +68,21 @@ async def on_message(message):
     if message.author.bot:
         return
 
+    if not aftermsgdel == 'false': await message.delete()
+
     if message.content.startswith("MLhelp"):
-        await message.delete()
         print(strtimestamp() + 'Start MLhelp')
-        if lang == 'ja':
-            msg = await message.channel.send('ミリシタガシャシミュレーターDiscordボット ' + mlgbotver + '\n' +\
-                prefix + 'help：ヘルプコマンドです。ミリシタガシャの説明を見ることができます。\n' +\
-                prefix + 'reload：ミリシタガシャデータベースを更新します。\n' +\
-                prefix + 'reset：全ユーザーのMLガシャを引いた回数をリセットします。\n' +\
-                prefix + 'cards：MLガシャで引いたカード名を確認することができます。\n' +\
-                prefix + 'pickup：現在のガシャ名とピックアップカードを確認できます。\n' +\
-                prefix + 'call：MLガシャで引いたカード画像を検索できます。スペースを挟んでカード名を入力してください。（制服シリーズはアイドル名も記入）\n' +\
-                prefix + 'ガシャ or ' + prefix + 'gacha：ミリシタガシャシミュレーターができます。10を後に入力すると、10連ガシャになります。')
-        elif lang == 'cn':
-            msg = await message.channel.send('劇場時光轉蛋模擬器Discord Bot ' + mlgbotver + '\n' +\
-                prefix + 'help：This command.\n' +\
-                prefix + 'reload：Update MLG database.\n' +\
-                prefix + 'reset：Reset all users gacha count.\n' +\
-                prefix + 'cards：Check cards you have.\n' +\
-                prefix + 'pickup：Check pickup cards.\n' +\
-                prefix + 'call：Check card you have to type card name.\n' +\
-                prefix + '轉蛋 or ' + prefix + 'gacha：Play MLTD Gacha Simulator. Type "10" after this command, play it 10 times in a row.')
-        elif lang == 'kr':
-            msg = await message.channel.send('밀리언 라이브! 시어터 데이즈 촬영 시뮬레이터 Discord Bot ' + mlgbotver + '\n' +\
-                prefix + 'help：This command.\n' +\
-                prefix + 'reload：Update MLG database.\n' +\
-                prefix + 'reset：Reset all users gacha count.\n' +\
-                prefix + 'cards：Check cards you have.\n' +\
-                prefix + 'pickup：Check pickup cards.\n' +\
-                prefix + 'call：Check card you have to type card name.\n' +\
-                prefix + '촬영 or ' + prefix + 'gacha：Play MLTD Gacha Simulator. Type "10" after this command, play it 10 times in a row.')
-        else:
-            msg = await message.channel.send('Million Live! Theater Days Gacha Simulator Discord Bot ' + mlgbotver + '\n' +\
-                prefix + 'help：This command.\n' +\
-                prefix + 'reload：Update MLG database.\n' +\
-                prefix + 'reset：Reset all users gacha count.\n' +\
-                prefix + 'cards：Check cards you have.\n' +\
-                prefix + 'pickup：Check pickup cards.\n' +\
-                prefix + 'call：Check card you have to type card name.\n' +\
-                prefix + 'gacha：Play MLTD Gacha Simulator. Type "10" after this command, play it 10 times in a row.')
+        msg = await message.channel.send('ミリシタガシャシミュレーターDiscordボット ' + mlgbotver + '\n' +\
+            'MLhelp：ヘルプコマンドです。ミリシタガシャの説明を見ることができます。\n' +\
+            prefix + 'reload：ミリシタガシャデータベースを更新します。\n' +\
+            prefix + 'reset：全ユーザーのMLガシャを引いた回数をリセットします。\n' +\
+            prefix + 'cards：MLガシャで引いたカード名を確認することができます。\n' +\
+            prefix + 'pickup：現在のガシャ名とピックアップカードを確認できます。\n' +\
+            prefix + 'call：MLガシャで引いたカード画像を検索できます。スペースを挟んでカード名を入力してください。（制服シリーズはアイドル名も記入）\n' +\
+            prefix + 'ガシャ or ' + prefix + '轉蛋 or ' + prefix + '촬영 or ' + prefix + 'gacha：ミリシタガシャシミュレーターができます。' +\
+            '10を後ろに付け加えると、10連ガシャになります。jp（日本語版）、cn（中国語繁体字版）、kr（韓国語版）を後ろに付け加えると、その言語のガシャが引くことができます。')
         
     elif message.content.startswith(prefix + "reload"):
-        await message.delete()
         if timer > 0:
             msgn = await message.channel.send(_('リロード直後です。') + str(timer) + _('秒後にお試しください。'))
             await asyncio.sleep(10)
@@ -120,20 +90,15 @@ async def on_message(message):
             return
         await gacha_reload(1,message)
     elif message.content.startswith(prefix + 'cards'):
-        await message.delete()
         print(strtimestamp() + 'Start MLGacha[cards].')
         await gacha_note(message)
     elif message.content.startswith(prefix + 'reset'):
-        await message.delete()
         print(strtimestamp() + 'Start MLGacha[reset].')
         file_list = glob.glob("./gacha_count/*.txt")
         for file in file_list:
             os.remove(file)
-        msgn = await message.channel.send(_('すべてのユーザーのガチャカウントをリセットしました。'))
-        await asyncio.sleep(10)
-        await msgn.delete()
+        await message.channel.send(_('すべてのユーザーのガチャカウントをリセットしました。'))
     elif message.content.startswith(prefix + 'pickup'):
-        await message.delete()
         print(strtimestamp() + 'Start MLGacha[pickup].')
         langint = 0
         if not message.content[7:] == '':
@@ -157,7 +122,6 @@ async def on_message(message):
         emb.set_author(name=pickup_name[langint])
         await message.channel.send('', embed=emb)
     elif message.content.startswith(prefix + 'call'):
-        await message.delete()
         print(strtimestamp() + 'Start MLGacha[call].')
         cv = ''
         desc = ''
@@ -254,29 +218,22 @@ async def on_message(message):
                         return
                 return
     elif message.content.startswith(prefix + "ガシャ") or message.content.startswith(prefix + "gacha") or message.content.startswith(prefix + "轉蛋") or message.content.startswith(prefix + "촬영"):
-        await message.delete()
+        try:
+            if client.voice_clients[0] is not None:
+                msgn = await message.channel.send(_('他のユーザーがプレイ中です。終了までお待ちください。'))
+                return
+        except:
+            pass
 
         try:
             vc_id = message.author.voice.channel.id
             channel = client.get_channel(vc_id)
         except:
             vc_id = None
-        
-        try:
-            if client.voice_clients[0] is not None:
-                msgn = await message.channel.send(_('他のユーザーがプレイ中です。終了までお待ちください。'))
-                await asyncio.sleep(10)
-                await msgn.delete()
-                return
-        except:
-            pass
 
         kind = ''
         result = []
         img = ''
-        author = message.author
-        
-        channel = client.get_channel(vc_id)
         
         gacha_count = int()
 
@@ -292,10 +249,10 @@ async def on_message(message):
             langint = langtoint()
 
         try:
-            with open('./gacha_count/' + langnamelist[langint] + str(author.id) + '.txt', 'r') as f:
+            with open('./gacha_count/' + langnamelist[langint] + str(message.author.id) + '.txt', 'r') as f:
                 gacha_count = int(f.read())
         except:
-            with open('./gacha_count/' + langnamelist[langint] + str(author.id) + '.txt', 'w') as f:
+            with open('./gacha_count/' + langnamelist[langint] + str(message.author.id) + '.txt', 'w') as f:
                 f.write('0')
 
         if gacha_count >= 300:
@@ -313,7 +270,7 @@ async def on_message(message):
                     pickup_counter += 1
 
             mlgpickupemb = discord.Embed(title=_('交換カード一覧'), description=name)
-            mlgpickupemb.set_author(name=author.name, icon_url=author.avatar_url)
+            mlgpickupemb.set_author(name=message.author.name, icon_url=message.author.avatar_url)
             mlgpickupemb.set_footer(text=pickup_name[langint])
             msgs = await message.channel.send(_('ドリームスターがカード交換数に達しているため、ガシャをご利用いただけません。カードを交換してください。\n該当番号のリアクションを返すと交換できます。'), embed=mlgpickupemb)
 
@@ -323,7 +280,7 @@ async def on_message(message):
             kind = _('ドリームスター交換') + '「' + pickup_name[langint] + '」'
             try:
                 gacha_count = 0
-                with open('./gacha_count/' + langnamelist[langint] + str(author.id) + '.txt', 'w') as f:
+                with open('./gacha_count/' + langnamelist[langint] + str(message.author.id) + '.txt', 'w') as f:
                     f.write(str(gacha_count))
             except:
                 print(strtimestamp() + '[ERROR]Gacha count FAILED.')
@@ -371,7 +328,7 @@ async def on_message(message):
 
             await msgs.delete()
 
-            print(strtimestamp() + 'Start MLChange[' + kind + '] by ' + str(author.id) + '.')
+            print(strtimestamp() + 'Start MLChange[' + kind + '] by ' + str(message.author.id) + '.')
 
             if vc_id == None:
                 vc = None
@@ -383,18 +340,18 @@ async def on_message(message):
                 vc = await channel.connect()
 
             await asyncio.sleep(0.7)
-            msg = await message.channel.send(author.mention + ' https://i.imgur.com/da2w9YS.gif')
+            msg = await message.channel.send(message.author.mention + ' https://i.imgur.com/da2w9YS.gif')
             await msg.add_reaction('👆')
             
             char_list = list()
             try:
-                with open('./gacha/' + langnamelist[langint] + str(author.id) + '.txt', 'r') as f:
+                with open('./gacha/' + langnamelist[langint] + str(message.author.id) + '.txt', 'r') as f:
                     listline = f.read()
                     char_list = list(listline)
             except:
                 pass
 
-            with open('./gacha/' + langnamelist[langint] + str(author.id) + '.txt', 'w+') as f:
+            with open('./gacha/' + langnamelist[langint] + str(message.author.id) + '.txt', 'w+') as f:
                 try:
                     char_list[result[0][7]] = '1'
                 except:
@@ -405,7 +362,7 @@ async def on_message(message):
                 newlistline = ''.join(char_list)
                 f.write(newlistline)
 
-            await mlg_touch(msg,message,result,img,author,kind,vc,20,0,botmsg)
+            await mlg_touch(msg,message,result,img,message.author,kind,vc,20,0,botmsg)
 
             if vc.is_connected():
                 while vc.is_playing():
@@ -431,7 +388,7 @@ async def on_message(message):
 
         try:
             gacha_count += role
-            with open('./gacha_count/' + langnamelist[langint] + str(author.id) + '.txt', 'w') as f:
+            with open('./gacha_count/' + langnamelist[langint] + str(message.author.id) + '.txt', 'w') as f:
                 f.write(str(gacha_count))
         except:
             print(strtimestamp() + '[ERROR]Failed to count.')
@@ -511,18 +468,18 @@ async def on_message(message):
         else:
             img = 'https://i.imgur.com/hEHa49X.gif'
 
-        print(strtimestamp() + 'Start MLGacha[' + pickup_name[langint] + '] by ' + author.name + '.')
+        print(strtimestamp() + 'Start MLGacha[' + pickup_name[langint] + '] by ' + message.author.name + '.')
 
         char_list = list()
         try:
-            with open('./gacha/' + langnamelist[langint] + str(author.id) + '.txt', 'r') as f:
+            with open('./gacha/' + langnamelist[langint] + str(message.author.id) + '.txt', 'r') as f:
                 listline = f.read()
                 char_list = list(listline)
         except:
             pass
 
         for box in result:
-            with open('./gacha/' + langnamelist[langint] + str(author.id) + '.txt', 'w+') as f:
+            with open('./gacha/' + langnamelist[langint] + str(message.author.id) + '.txt', 'w+') as f:
                 try:
                     char_list[box[7]] = '1'
                 except:
@@ -568,7 +525,7 @@ async def on_message(message):
         msg = await message.channel.send(message.author.mention, embed=waitemb)
         await msg.add_reaction('👆')
 
-        await mlg_touch(msg,message,result,img,author,pickup_name[langint],vc,pink_flag,fes_flag,botmsg)
+        await mlg_touch(msg,message,result,img,message.author,pickup_name[langint],vc,pink_flag,fes_flag,botmsg)
             
         if vc.is_connected():
             while vc.is_playing():
