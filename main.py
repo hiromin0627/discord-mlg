@@ -1,7 +1,7 @@
 #coding: utf-8
 #created by @hiromin0627
 #MilliShita Gacha 2.2.2
-mlgbotver = '2.2.2'
+mlgbotver = '2.2.3'
 
 import glob
 import gettext
@@ -68,9 +68,8 @@ async def on_message(message):
     if message.author.bot:
         return
 
-    if not aftermsgdel == 'false': await message.delete()
-
     if message.content.startswith("MLhelp"):
+        if not aftermsgdel == 'false': await message.delete()
         print(strtimestamp() + 'Start MLhelp')
         msg = await message.channel.send('ミリシタガシャシミュレーターDiscordボット ' + mlgbotver + '\n' +\
             'MLhelp：ヘルプコマンドです。ミリシタガシャの説明を見ることができます。\n' +\
@@ -82,267 +81,397 @@ async def on_message(message):
             prefix + 'ガシャ or ' + prefix + '轉蛋 or ' + prefix + '촬영 or ' + prefix + 'gacha：ミリシタガシャシミュレーターができます。' +\
             '10を後ろに付け加えると、10連ガシャになります。jp（日本語版）、cn（中国語繁体字版）、kr（韓国語版）を後ろに付け加えると、その言語のガシャが引くことができます。')
         
-    elif message.content.startswith(prefix + "reload"):
-        if timer > 0:
-            msgn = await message.channel.send(_('リロード直後です。') + str(timer) + _('秒後にお試しください。'))
-            await asyncio.sleep(10)
-            await msgn.delete()
-            return
-        await gacha_reload(1,message)
-    elif message.content.startswith(prefix + 'cards'):
-        print(strtimestamp() + 'Start MLGacha[cards].')
-        await gacha_note(message)
-    elif message.content.startswith(prefix + 'reset'):
-        print(strtimestamp() + 'Start MLGacha[reset].')
-        file_list = glob.glob("./gacha_count/*.txt")
-        for file in file_list:
-            os.remove(file)
-        await message.channel.send(_('すべてのユーザーのガチャカウントをリセットしました。'))
-    elif message.content.startswith(prefix + 'pickup'):
-        print(strtimestamp() + 'Start MLGacha[pickup].')
-        langint = 0
-        if not message.content[7:] == '':
-            if 'ja' in message.content[6:]:
-                langint = 0
-            elif 'cn' in message.content[6:]:
-                langint = 1
-            elif 'kr' in message.content[6:]:
-                langint = 2
-        else:
-            langint = langtoint()
+    if message.content.startswith(prefix):
+        if not aftermsgdel == 'false': await message.delete()
 
-        name = ''
-        pickup_listnum = [5,4,3]
-        for n in pickup_listnum:
-            for val in mlg_data[langint][n]:
-                lim = _('限定') if val[6] == 3 else ''
-                name += '［' + lim + rarity_str[val[5]] + '］' + val[1] + ' ' + val[0] + '\n'
-
-        emb = discord.Embed(title=_('現在のミリシタガシャピックアップはこちらです！！'), description=name)
-        emb.set_author(name=pickup_name[langint])
-        await message.channel.send('', embed=emb)
-    elif message.content.startswith(prefix + 'call'):
-        print(strtimestamp() + 'Start MLGacha[call].')
-        cv = ''
-        desc = ''
-        char_list = list()
-        carddata = []
-        langint = 0
-        if not message.content[5:] == '':
-            if 'ja' in message.content[4:]:
-                langint = 0
-            elif 'cn' in message.content[4:]:
-                langint = 1
-            elif 'kr' in message.content[4:]:
-                langint = 2
-        else:
-            langint = langtoint()
-
-        try:
-            with open('./gacha/' + langnamelist[langint] + str(message.author.id) + '.txt', 'r') as f:
-                listline = f.read()
-                char_list = list(listline)
-        except:
-            pass
-
-        if '制服シリーズ' in message.content[6:]:
-            for data in imas.million_data:
-                if data[0] in message.content[6:]:
-                    for r,val in enumerate(mlg_all[langint]):
-                        if val[0] in message.content[6:] and val[1] == '制服シリーズ':
-                            if char_list[r] == '1':
-                                carddata = val
-            if len(carddata) == 0:
-                msgn = await message.channel.send(_('制服シリーズの場合、アイドル名も同時に入力する必要があります。'))
+        if message.content.startswith(prefix + "reload"):
+            if timer > 0:
+                msgn = await message.channel.send(_('リロード直後です。') + str(timer) + _('秒後にお試しください。'))
                 await asyncio.sleep(10)
                 await msgn.delete()
                 return
-        elif 'シアターデイズ' in message.content[6:] or '劇場時光' in message.content[6:] or '시어터 데이즈' in message.content[6:]:
-            for data in imas.million_data:
-                if data[0] in message.content[6:]:
-                    for r,val in enumerate(mlg_all[langint]):
-                        if val[0] in message.content[6:] and (val[1] == 'シアターデイズ' or val[1] == '劇場時光' or val[1] == '시어터 데이즈'):
-                            if char_list[r] == '1':
-                                carddata = val
-            if len(carddata) == 0:
-                msgn = await message.channel.send(_('シアターデイズの場合、アイドル名も同時に入力する必要があります。'))
-                await asyncio.sleep(10)
-                await msgn.delete()
-                return
-        else:
-            for r,val in enumerate(mlg_all[langint]):
-                if val[1] in message.content[6:]:
-                    if char_list[r] == '1':
-                        carddata = val
-
-        if len(carddata) == 0:
-            msgn = await message.channel.send(_('カード名が違うか、このカードを所持していません！\n「MLcheck」で自分が所持しているカード名を確認してください。'))
-            await asyncio.sleep(10)
-            await msgn.delete()
-            return
-
-        if lang == 'ja': lang_data = 0
-        elif lang == 'cn': lang_data = 4
-        elif lang == 'kr': lang_data = 6
-        else: lang_data = 0
-        for data in imas.million_data:
-            if carddata[0] in data[lang_data]:
-                color = data[3]
-                cv = 'CV.' + data[lang_data + 1]
-
-        desc = '[' + rarity_str[int(carddata[5])] + ']' + carddata[1] + ' ' + carddata[0]
-        embmsg1 = discord.Embed(title=desc, description=cv, colour=color)
-        embmsg1.set_author(name=message.author.name + _('所持カード'), icon_url=message.author.avatar_url)
-        embmsg1.set_image(url=carddata[2])
-        if carddata[5] >= 2:
-            msg = await message.channel.send('👆' + _('を押して覚醒後へ'), embed=embmsg1)
-        else:
-            msg = await message.channel.send('👆' + _('を押して閉じる'), embed=embmsg1)
-        await msg.add_reaction('👆')
-        while True:
-            target_reaction, user = await client.wait_for('reaction_add')
-            if target_reaction.emoji == '👆' and user != msg.author:
-                if carddata[5] == 2 or carddata[5] == 3:
-                    await msg.remove_reaction(target_reaction.emoji, user)
-                    embmsg1.set_image(url=carddata[3])
-                    await msg.edit(content='👆' + _('を押して閉じる'), embed=embmsg1)
-                    while True:
-                        target_reaction, user = await client.wait_for('reaction_add')
-                        if target_reaction.emoji == '👆' and user != msg.author:
-                            await msg.delete()
-                            return
-                else:
-                    target_reaction, user = await client.wait_for('reaction_add')
-                    if target_reaction.emoji == '👆' and user != msg.author:
-                        await msg.delete()
-                        return
-                return
-    elif message.content.startswith(prefix + "ガシャ") or message.content.startswith(prefix + "gacha") or message.content.startswith(prefix + "轉蛋") or message.content.startswith(prefix + "촬영"):
-        try:
-            if client.voice_clients[0] is not None:
-                msgn = await message.channel.send(_('他のユーザーがプレイ中です。終了までお待ちください。'))
-                return
-        except:
-            pass
-
-        try:
-            vc_id = message.author.voice.channel.id
-            channel = client.get_channel(vc_id)
-        except:
-            vc_id = None
-
-        kind = ''
-        result = []
-        img = ''
-        
-        gacha_count = int()
-
-        langint = 0
-        if 'ja' in message.content or 'cn' in message.content or 'kr' in message.content:
-            if 'ja' in message.content:
-                langint = 0
-            elif 'cn' in message.content:
-                langint = 1
-            elif 'kr' in message.content:
-                langint = 2
-        else:
-            langint = langtoint()
-
-        try:
-            with open('./gacha_count/' + langnamelist[langint] + str(message.author.id) + '.txt', 'r') as f:
-                gacha_count = int(f.read())
-        except:
-            with open('./gacha_count/' + langnamelist[langint] + str(message.author.id) + '.txt', 'w') as f:
-                f.write('0')
-
-        if gacha_count >= 300:
-            count_emoji = ['1⃣','2⃣','3⃣','4⃣','5⃣','6⃣','7⃣','8⃣','9⃣','🔟']
-            pickup_counter = 0
-            pickup_alllist = list()
+            await gacha_reload(1,message)
+        elif message.content.startswith(prefix + 'cards'):
+            print(strtimestamp() + 'Start MLGacha[cards].')
+            await gacha_note(message)
+        elif message.content.startswith(prefix + 'reset'):
+            print(strtimestamp() + 'Start MLGacha[reset].')
+            file_list = glob.glob("./gacha_count/*.txt")
+            for file in file_list:
+                os.remove(file)
+            await message.channel.send(_('すべてのユーザーのガチャカウントをリセットしました。'))
+        elif message.content.startswith(prefix + 'pickup'):
+            print(strtimestamp() + 'Start MLGacha[pickup].')
+            langint = 0
+            if not message.content[7:] == '':
+                if 'ja' in message.content[6:]:
+                    langint = 0
+                elif 'cn' in message.content[6:]:
+                    langint = 1
+                elif 'kr' in message.content[6:]:
+                    langint = 2
+            else:
+                langint = langtoint()
 
             name = ''
             pickup_listnum = [5,4,3]
             for n in pickup_listnum:
                 for val in mlg_data[langint][n]:
                     lim = _('限定') if val[6] == 3 else ''
-                    pickup_alllist.append(val)
                     name += '［' + lim + rarity_str[val[5]] + '］' + val[1] + ' ' + val[0] + '\n'
-                    pickup_counter += 1
 
-            mlgpickupemb = discord.Embed(title=_('交換カード一覧'), description=name)
-            mlgpickupemb.set_author(name=message.author.name, icon_url=message.author.avatar_url)
-            mlgpickupemb.set_footer(text=pickup_name[langint])
-            msgs = await message.channel.send(_('ドリームスターがカード交換数に達しているため、ガシャをご利用いただけません。カードを交換してください。\n該当番号のリアクションを返すと交換できます。'), embed=mlgpickupemb)
+            emb = discord.Embed(title=_('現在のミリシタガシャピックアップはこちらです！！'), description=name)
+            emb.set_author(name=pickup_name[langint])
+            await message.channel.send('', embed=emb)
+        elif message.content.startswith(prefix + 'call'):
+            print(strtimestamp() + 'Start MLGacha[call].')
+            cv = ''
+            desc = ''
+            char_list = list()
+            carddata = []
+            langint = 0
+            if not message.content[5:] == '':
+                if 'ja' in message.content[4:]:
+                    langint = 0
+                elif 'cn' in message.content[4:]:
+                    langint = 1
+                elif 'kr' in message.content[4:]:
+                    langint = 2
+            else:
+                langint = langtoint()
 
-            for r in range(pickup_counter):
-                await msgs.add_reaction(count_emoji[r])
-
-            kind = _('ドリームスター交換') + '「' + pickup_name[langint] + '」'
             try:
-                gacha_count = 0
+                with open('./gacha/' + langnamelist[langint] + str(message.author.id) + '.txt', 'r') as f:
+                    listline = f.read()
+                    char_list = list(listline)
+            except:
+                pass
+
+            if '制服シリーズ' in message.content[6:]:
+                for data in imas.million_data:
+                    if data[0] in message.content[6:]:
+                        for r,val in enumerate(mlg_all[langint]):
+                            if val[0] in message.content[6:] and val[1] == '制服シリーズ':
+                                if char_list[r] == '1':
+                                    carddata = val
+                if len(carddata) == 0:
+                    msgn = await message.channel.send(_('制服シリーズの場合、アイドル名も同時に入力する必要があります。'))
+                    await asyncio.sleep(10)
+                    await msgn.delete()
+                    return
+            elif 'シアターデイズ' in message.content[6:] or '劇場時光' in message.content[6:] or '시어터 데이즈' in message.content[6:]:
+                for data in imas.million_data:
+                    if data[0] in message.content[6:]:
+                        for r,val in enumerate(mlg_all[langint]):
+                            if val[0] in message.content[6:] and (val[1] == 'シアターデイズ' or val[1] == '劇場時光' or val[1] == '시어터 데이즈'):
+                                if char_list[r] == '1':
+                                    carddata = val
+                if len(carddata) == 0:
+                    msgn = await message.channel.send(_('シアターデイズの場合、アイドル名も同時に入力する必要があります。'))
+                    await asyncio.sleep(10)
+                    await msgn.delete()
+                    return
+            else:
+                for r,val in enumerate(mlg_all[langint]):
+                    if val[1] in message.content[6:]:
+                        if char_list[r] == '1':
+                            carddata = val
+
+            if len(carddata) == 0:
+                msgn = await message.channel.send(_('カード名が違うか、このカードを所持していません！\n「MLcheck」で自分が所持しているカード名を確認してください。'))
+                await asyncio.sleep(10)
+                await msgn.delete()
+                return
+
+            if lang == 'ja': lang_data = 0
+            elif lang == 'cn': lang_data = 4
+            elif lang == 'kr': lang_data = 6
+            else: lang_data = 0
+            for data in imas.million_data:
+                if carddata[0] in data[lang_data]:
+                    color = data[3]
+                    cv = 'CV.' + data[lang_data + 1]
+
+            desc = '[' + rarity_str[int(carddata[5])] + ']' + carddata[1] + ' ' + carddata[0]
+            embmsg1 = discord.Embed(title=desc, description=cv, colour=color)
+            embmsg1.set_author(name=message.author.name + _('所持カード'), icon_url=message.author.avatar_url)
+            embmsg1.set_image(url=carddata[2])
+            if carddata[5] >= 2:
+                msg = await message.channel.send('👆' + _('を押して覚醒後へ'), embed=embmsg1)
+            else:
+                msg = await message.channel.send('👆' + _('を押して閉じる'), embed=embmsg1)
+            await msg.add_reaction('👆')
+            while True:
+                target_reaction, user = await client.wait_for('reaction_add')
+                if target_reaction.emoji == '👆' and user != msg.author:
+                    if carddata[5] == 2 or carddata[5] == 3:
+                        await msg.remove_reaction(target_reaction.emoji, user)
+                        embmsg1.set_image(url=carddata[3])
+                        await msg.edit(content='👆' + _('を押して閉じる'), embed=embmsg1)
+                        while True:
+                            target_reaction, user = await client.wait_for('reaction_add')
+                            if target_reaction.emoji == '👆' and user != msg.author:
+                                await msg.delete()
+                                return
+                    else:
+                        target_reaction, user = await client.wait_for('reaction_add')
+                        if target_reaction.emoji == '👆' and user != msg.author:
+                            await msg.delete()
+                            return
+                    return
+        elif message.content.startswith(prefix + "ガシャ") or message.content.startswith(prefix + "gacha") or message.content.startswith(prefix + "轉蛋") or message.content.startswith(prefix + "촬영"):
+            try:
+                if client.voice_clients[0] is not None:
+                    msgn = await message.channel.send(_('他のユーザーがプレイ中です。終了までお待ちください。'))
+                    return
+            except:
+                pass
+
+            try:
+                vc_id = message.author.voice.channel.id
+                channel = client.get_channel(vc_id)
+            except:
+                vc_id = None
+
+            kind = ''
+            result = []
+            img = ''
+            
+            gacha_count = int()
+
+            langint = 0
+            if 'ja' in message.content or 'cn' in message.content or 'kr' in message.content:
+                if 'ja' in message.content:
+                    langint = 0
+                elif 'cn' in message.content:
+                    langint = 1
+                elif 'kr' in message.content:
+                    langint = 2
+            else:
+                langint = langtoint()
+
+            try:
+                with open('./gacha_count/' + langnamelist[langint] + str(message.author.id) + '.txt', 'r') as f:
+                    gacha_count = int(f.read())
+            except:
+                with open('./gacha_count/' + langnamelist[langint] + str(message.author.id) + '.txt', 'w') as f:
+                    f.write('0')
+
+            if gacha_count >= 300:
+                count_emoji = ['1⃣','2⃣','3⃣','4⃣','5⃣','6⃣','7⃣','8⃣','9⃣','🔟']
+                pickup_counter = 0
+                pickup_alllist = list()
+
+                name = ''
+                pickup_listnum = [5,4,3]
+                for n in pickup_listnum:
+                    for val in mlg_data[langint][n]:
+                        lim = _('限定') if val[6] == 3 else ''
+                        pickup_alllist.append(val)
+                        name += '［' + lim + rarity_str[val[5]] + '］' + val[1] + ' ' + val[0] + '\n'
+                        pickup_counter += 1
+
+                mlgpickupemb = discord.Embed(title=_('交換カード一覧'), description=name)
+                mlgpickupemb.set_author(name=message.author.name, icon_url=message.author.avatar_url)
+                mlgpickupemb.set_footer(text=pickup_name[langint])
+                msgs = await message.channel.send(_('ドリームスターがカード交換数に達しているため、ガシャをご利用いただけません。カードを交換してください。\n該当番号のリアクションを返すと交換できます。'), embed=mlgpickupemb)
+
+                for r in range(pickup_counter):
+                    await msgs.add_reaction(count_emoji[r])
+
+                kind = _('ドリームスター交換') + '「' + pickup_name[langint] + '」'
+                try:
+                    gacha_count = 0
+                    with open('./gacha_count/' + langnamelist[langint] + str(message.author.id) + '.txt', 'w') as f:
+                        f.write(str(gacha_count))
+                except:
+                    print(strtimestamp() + '[ERROR]Gacha count FAILED.')
+
+                pickup_num = int()
+                while True:
+                    target_reaction, user = await client.wait_for('reaction_add')
+                    if not user == msgs.author:
+                        if target_reaction.emoji == '1⃣':
+                            pickup_num = 0
+                            break
+                        elif target_reaction.emoji == '2⃣':
+                            pickup_num = 1
+                            break
+                        elif target_reaction.emoji == '3⃣':
+                            pickup_num = 2
+                            break
+                        elif target_reaction.emoji == '4⃣':
+                            pickup_num = 3
+                            break
+                        elif target_reaction.emoji == '5⃣':
+                            pickup_num = 4
+                            break
+                        elif target_reaction.emoji == '6⃣':
+                            pickup_num = 5
+                            break
+                        elif target_reaction.emoji == '7⃣':
+                            pickup_num = 6
+                            break
+                        elif target_reaction.emoji == '8⃣':
+                            pickup_num = 7
+                            break
+                        elif target_reaction.emoji == '9⃣':
+                            pickup_num = 8
+                            break
+                        elif target_reaction.emoji == '🔟':
+                            pickup_num = 9
+                            break
+
+                result = [pickup_alllist[pickup_num]]
+
+                if result[0][5] >= 2: img = 'https://i.imgur.com/jWTTZ0d.gif'
+                elif result[0][5] == 1: img = 'https://i.imgur.com/vF7fDn3.gif'
+                else: img = 'https://i.imgur.com/hEHa49X.gif'
+
+                await msgs.delete()
+
+                print(strtimestamp() + 'Start MLChange[' + kind + '] by ' + str(message.author.id) + '.')
+
+                if vc_id == None:
+                    vc = None
+                    botmsg = None
+                else:
+                    if not bgm_id == 0:
+                        toBot = client.get_channel(bgm_id)
+                        botmsg = await toBot.send('ML' + str(vc_id))
+                    vc = await channel.connect()
+
+                await asyncio.sleep(0.7)
+                msg = await message.channel.send(message.author.mention + ' https://i.imgur.com/da2w9YS.gif')
+                await msg.add_reaction('👆')
+                
+                char_list = list()
+                try:
+                    with open('./gacha/' + langnamelist[langint] + str(message.author.id) + '.txt', 'r') as f:
+                        listline = f.read()
+                        char_list = list(listline)
+                except:
+                    pass
+
+                with open('./gacha/' + langnamelist[langint] + str(message.author.id) + '.txt', 'w+') as f:
+                    try:
+                        char_list[result[0][7]] = '1'
+                    except:
+                        for n in range(500):
+                            char_list.append('0')
+                        char_list[result[0][7]] = '1'
+
+                    newlistline = ''.join(char_list)
+                    f.write(newlistline)
+
+                await mlg_touch(msg,message,result,img,message.author,kind,vc,20,0,botmsg)
+
+                if vc.is_connected():
+                    while vc.is_playing():
+                        await asyncio.sleep(2)
+                return
+
+            role = 0
+            ssr_rate = 9700
+            pick_rate = 99
+
+            if pickup_name[langint] == _('ミリオンフェス'):
+                ssr_rate = 9400
+                pick_rate = 198
+
+            fes_flag = 0
+            ssr_flag = 0
+            sr_flag = 0
+
+            if '10' in message.content or '１０' in message.content:
+                role = 10
+            else:
+                role = 1
+
+            try:
+                gacha_count += role
                 with open('./gacha_count/' + langnamelist[langint] + str(message.author.id) + '.txt', 'w') as f:
                     f.write(str(gacha_count))
             except:
-                print(strtimestamp() + '[ERROR]Gacha count FAILED.')
+                print(strtimestamp() + '[ERROR]Failed to count.')
 
-            pickup_num = int()
-            while True:
-                target_reaction, user = await client.wait_for('reaction_add')
-                if not user == msgs.author:
-                    if target_reaction.emoji == '1⃣':
-                        pickup_num = 0
-                        break
-                    elif target_reaction.emoji == '2⃣':
-                        pickup_num = 1
-                        break
-                    elif target_reaction.emoji == '3⃣':
-                        pickup_num = 2
-                        break
-                    elif target_reaction.emoji == '4⃣':
-                        pickup_num = 3
-                        break
-                    elif target_reaction.emoji == '5⃣':
-                        pickup_num = 4
-                        break
-                    elif target_reaction.emoji == '6⃣':
-                        pickup_num = 5
-                        break
-                    elif target_reaction.emoji == '7⃣':
-                        pickup_num = 6
-                        break
-                    elif target_reaction.emoji == '8⃣':
-                        pickup_num = 7
-                        break
-                    elif target_reaction.emoji == '9⃣':
-                        pickup_num = 8
-                        break
-                    elif target_reaction.emoji == '🔟':
-                        pickup_num = 9
-                        break
+            if len(mlg_data[langint][3]) == 0: rpick = mlg_data[langint][0]
+            else: rpick = mlg_data[langint][5]
 
-            result = [pickup_alllist[pickup_num]]
-
-            if result[0][5] >= 2: img = 'https://i.imgur.com/jWTTZ0d.gif'
-            elif result[0][5] == 1: img = 'https://i.imgur.com/vF7fDn3.gif'
-            else: img = 'https://i.imgur.com/hEHa49X.gif'
-
-            await msgs.delete()
-
-            print(strtimestamp() + 'Start MLChange[' + kind + '] by ' + str(message.author.id) + '.')
-
-            if vc_id == None:
-                vc = None
-                botmsg = None
-            else:
-                if not bgm_id == 0:
-                    toBot = client.get_channel(bgm_id)
-                    botmsg = await toBot.send('ML' + str(vc_id))
-                vc = await channel.connect()
-
-            await asyncio.sleep(0.7)
-            msg = await message.channel.send(message.author.mention + ' https://i.imgur.com/da2w9YS.gif')
-            await msg.add_reaction('👆')
+            if len(mlg_data[langint][4]) == 0: srpick = mlg_data[langint][1]
+            else: srpick = mlg_data[langint][5]
             
+            for n in range(role):
+                if n < 9:
+                    rand = random.randint(0, 9999)
+                    if rand >= 0 and rand < 850:
+                        if len(rpick) > 1:
+                            result.append(rpick[random.randrange(len(rpick) - 1)])
+                        else:
+                            result.append(rpick[0])
+                    elif rand >= 850 and rand < 8500:
+                        result.append(mlg_data[langint][0][random.randrange(len(mlg_data[langint][0]) - 1)])
+                    elif rand >= 8500 and rand <= 8740:
+                        if len(srpick) > 1:
+                            result.append(srpick[random.randrange(len(srpick) - 1)])
+                        else:
+                            result.append(srpick[0])
+                        sr_flag = 1
+                    elif rand >= 8740 and rand <= ssr_rate:
+                        result.append(mlg_data[langint][1][random.randrange(len(mlg_data[langint][1]) - 1)])
+                        sr_flag = 1
+                    elif rand >= ssr_rate and rand <= ssr_rate + pick_rate:
+                        if len(mlg_data[langint][5]) > 1:
+                            result.append(mlg_data[langint][5][random.randrange(len(mlg_data[langint][5]) - 1)])
+                        else:
+                            result.append(mlg_data[langint][5][0])
+                        ssr_flag = 1
+                    elif rand >= ssr_rate + pick_rate:
+                        result.append(mlg_data[langint][2][random.randrange(len(mlg_data[langint][2]) - 1)])
+                        ssr_flag = 1
+                elif n == 9:
+                    rand = random.randint(0, 9999)
+                    if rand >= 0 and rand <= 240:
+                        if len(srpick) > 1:
+                            result.append(srpick[random.randrange(len(srpick) - 1)])
+                        else:
+                            result.append(srpick[0])
+                        sr_flag = 1
+                    elif rand >= 240 and rand <= ssr_rate:
+                        result.append(mlg_data[langint][1][random.randrange(len(mlg_data[langint][1]) - 1)])
+                        sr_flag = 1
+                    elif rand >= ssr_rate and rand <= ssr_rate + pick_rate:
+                        if len(mlg_data[langint][5]) > 1:
+                            result.append(mlg_data[langint][5][random.randrange(len(mlg_data[langint][5]) - 1)])
+                        else:
+                            result.append(mlg_data[langint][5][0])
+                        ssr_flag = 1
+                    elif rand >= ssr_rate + pick_rate:
+                        result.append(mlg_data[langint][2][random.randrange(len(mlg_data[langint][2]) - 1)])
+                        ssr_flag = 1
+
+            if pickup_name[langint] == _('ミリオンフェス'):
+                for val in result:
+                    if val[5] == 3:
+                        fes_flag = 1
+
+            pink_flag = random.randint(1, 20)
+            if fes_flag == 1:
+                if pink_flag == 10:
+                    img = 'https://i.imgur.com/fGpfCgB.gif'
+                elif pink_flag == 20:
+                    img = 'https://i.imgur.com/jWTTZ0d.gif'
+                else:
+                    img = 'https://i.imgur.com/0DxyVhm.gif'
+            elif ssr_flag == 1 and not fes_flag == 1:
+                img = 'https://i.imgur.com/jWTTZ0d.gif'
+            elif sr_flag == 1 and not fes_flag == 1 and not ssr_flag == 1:
+                img = 'https://i.imgur.com/vF7fDn3.gif'
+            else:
+                img = 'https://i.imgur.com/hEHa49X.gif'
+
+            print(strtimestamp() + 'Start MLGacha[' + pickup_name[langint] + '] by ' + message.author.name + '.')
+
             char_list = list()
             try:
                 with open('./gacha/' + langnamelist[langint] + str(message.author.id) + '.txt', 'r') as f:
@@ -351,185 +480,58 @@ async def on_message(message):
             except:
                 pass
 
-            with open('./gacha/' + langnamelist[langint] + str(message.author.id) + '.txt', 'w+') as f:
-                try:
-                    char_list[result[0][7]] = '1'
-                except:
-                    for n in range(500):
-                        char_list.append('0')
-                    char_list[result[0][7]] = '1'
+            for box in result:
+                with open('./gacha/' + langnamelist[langint] + str(message.author.id) + '.txt', 'w+') as f:
+                    try:
+                        char_list[box[7]] = '1'
+                    except:
+                        for n in range(500):
+                            char_list.append('0')
+                        char_list[box[7]] = '1'
 
-                newlistline = ''.join(char_list)
-                f.write(newlistline)
+                    newlistline = ''.join(char_list)
+                    f.write(newlistline)
 
-            await mlg_touch(msg,message,result,img,message.author,kind,vc,20,0,botmsg)
+            mess = random.randint(1,10)
+            phrase = str()
+            if mess >= 2 and (ssr_flag == 1 or fes_flag == 1): phrase = _('最高の一枚ができましたのでぜひご確認ください！')
+            elif mess <= 4 and (sr_flag == 1 or ssr_flag == 1 or fes_flag == 1): phrase = _('みんなのいい表情が撮れました！')
+            elif mess > 4 and mess <= 8 and (sr_flag == 1 or ssr_flag == 1 or fes_flag == 1): phrase = _('楽しそうなところが撮れましたよ')
 
+            if vc_id == None:
+                vc = None
+                botmsg = None
+                camera = await message.channel.send(phrase)
+                await asyncio.sleep(3)
+                await camera.delete()
+            else:
+                if not len(phrase) == 0:
+                    vc.play(discord.FFmpegPCMAudio('./resources/message.mp3'))
+                    camera = await message.channel.send(phrase)
+                    while vc.is_playing():
+                        await asyncio.sleep(1)
+                    await camera.delete()
+                if not bgm_id == 0:
+                    toBot = client.get_channel(bgm_id)
+                    botmsg = await toBot.send('ML' + str(vc_id))
+                vc = await channel.connect()
+
+            waitemb = discord.Embed()
+
+            await asyncio.sleep(0.7)
+            if fes_flag == 1 and pink_flag == 10: waitemb.set_image(url='https://i.imgur.com/ZC8JK9i.gif')
+            else: waitemb.set_image(url='https://i.imgur.com/da2w9YS.gif')
+                
+            waitemb.set_footer(text=pickup_name[langint])
+            waitemb.set_image(url='https://i.imgur.com/da2w9YS.gif')
+            msg = await message.channel.send(message.author.mention, embed=waitemb)
+            await msg.add_reaction('👆')
+
+            await mlg_touch(msg,message,result,img,message.author,pickup_name[langint],vc,pink_flag,fes_flag,botmsg)
+                
             if vc.is_connected():
                 while vc.is_playing():
                     await asyncio.sleep(2)
-            return
-
-        role = 0
-        ssr_rate = 9700
-        pick_rate = 99
-
-        if pickup_name[langint] == _('ミリオンフェス'):
-            ssr_rate = 9400
-            pick_rate = 198
-
-        fes_flag = 0
-        ssr_flag = 0
-        sr_flag = 0
-
-        if '10' in message.content or '１０' in message.content:
-            role = 10
-        else:
-            role = 1
-
-        try:
-            gacha_count += role
-            with open('./gacha_count/' + langnamelist[langint] + str(message.author.id) + '.txt', 'w') as f:
-                f.write(str(gacha_count))
-        except:
-            print(strtimestamp() + '[ERROR]Failed to count.')
-
-        if len(mlg_data[langint][3]) == 0: rpick = mlg_data[langint][0]
-        else: rpick = mlg_data[langint][5]
-
-        if len(mlg_data[langint][4]) == 0: srpick = mlg_data[langint][1]
-        else: srpick = mlg_data[langint][5]
-        
-        for n in range(role):
-            if n < 9:
-                rand = random.randint(0, 9999)
-                if rand >= 0 and rand < 850:
-                    if len(rpick) > 1:
-                        result.append(rpick[random.randrange(len(rpick) - 1)])
-                    else:
-                        result.append(rpick[0])
-                elif rand >= 850 and rand < 8500:
-                    result.append(mlg_data[langint][0][random.randrange(len(mlg_data[langint][0]) - 1)])
-                elif rand >= 8500 and rand <= 8740:
-                    if len(srpick) > 1:
-                        result.append(srpick[random.randrange(len(srpick) - 1)])
-                    else:
-                        result.append(srpick[0])
-                    sr_flag = 1
-                elif rand >= 8740 and rand <= ssr_rate:
-                    result.append(mlg_data[langint][1][random.randrange(len(mlg_data[langint][1]) - 1)])
-                    sr_flag = 1
-                elif rand >= ssr_rate and rand <= ssr_rate + pick_rate:
-                    if len(mlg_data[langint][5]) > 1:
-                        result.append(mlg_data[langint][5][random.randrange(len(mlg_data[langint][5]) - 1)])
-                    else:
-                        result.append(mlg_data[langint][5][0])
-                    ssr_flag = 1
-                elif rand >= ssr_rate + pick_rate:
-                    result.append(mlg_data[langint][2][random.randrange(len(mlg_data[langint][2]) - 1)])
-                    ssr_flag = 1
-            elif n == 9:
-                rand = random.randint(0, 9999)
-                if rand >= 0 and rand <= 240:
-                    if len(srpick) > 1:
-                        result.append(srpick[random.randrange(len(srpick) - 1)])
-                    else:
-                        result.append(srpick[0])
-                    sr_flag = 1
-                elif rand >= 240 and rand <= ssr_rate:
-                    result.append(mlg_data[langint][1][random.randrange(len(mlg_data[langint][1]) - 1)])
-                    sr_flag = 1
-                elif rand >= ssr_rate and rand <= ssr_rate + pick_rate:
-                    if len(mlg_data[langint][5]) > 1:
-                        result.append(mlg_data[langint][5][random.randrange(len(mlg_data[langint][5]) - 1)])
-                    else:
-                        result.append(mlg_data[langint][5][0])
-                    ssr_flag = 1
-                elif rand >= ssr_rate + pick_rate:
-                    result.append(mlg_data[langint][2][random.randrange(len(mlg_data[langint][2]) - 1)])
-                    ssr_flag = 1
-
-        if pickup_name[langint] == _('ミリオンフェス'):
-            for val in result:
-                if val[5] == 3:
-                    fes_flag = 1
-
-        pink_flag = random.randint(1, 20)
-        if fes_flag == 1:
-            if pink_flag == 10:
-                img = 'https://i.imgur.com/fGpfCgB.gif'
-            elif pink_flag == 20:
-                img = 'https://i.imgur.com/jWTTZ0d.gif'
-            else:
-                img = 'https://i.imgur.com/0DxyVhm.gif'
-        elif ssr_flag == 1 and not fes_flag == 1:
-            img = 'https://i.imgur.com/jWTTZ0d.gif'
-        elif sr_flag == 1 and not fes_flag == 1 and not ssr_flag == 1:
-            img = 'https://i.imgur.com/vF7fDn3.gif'
-        else:
-            img = 'https://i.imgur.com/hEHa49X.gif'
-
-        print(strtimestamp() + 'Start MLGacha[' + pickup_name[langint] + '] by ' + message.author.name + '.')
-
-        char_list = list()
-        try:
-            with open('./gacha/' + langnamelist[langint] + str(message.author.id) + '.txt', 'r') as f:
-                listline = f.read()
-                char_list = list(listline)
-        except:
-            pass
-
-        for box in result:
-            with open('./gacha/' + langnamelist[langint] + str(message.author.id) + '.txt', 'w+') as f:
-                try:
-                    char_list[box[7]] = '1'
-                except:
-                    for n in range(500):
-                        char_list.append('0')
-                    char_list[box[7]] = '1'
-
-                newlistline = ''.join(char_list)
-                f.write(newlistline)
-
-        mess = random.randint(1,10)
-        phrase = str()
-        if mess >= 2 and (ssr_flag == 1 or fes_flag == 1): phrase = _('最高の一枚ができましたのでぜひご確認ください！')
-        elif mess <= 4 and (sr_flag == 1 or ssr_flag == 1 or fes_flag == 1): phrase = _('みんなのいい表情が撮れました！')
-        elif mess > 4 and mess <= 8 and (sr_flag == 1 or ssr_flag == 1 or fes_flag == 1): phrase = _('楽しそうなところが撮れましたよ')
-
-        if vc_id == None:
-            vc = None
-            botmsg = None
-            camera = await message.channel.send(phrase)
-            await asyncio.sleep(3)
-            await camera.delete()
-        else:
-            if not len(phrase) == 0:
-                vc.play(discord.FFmpegPCMAudio('./resources/message.mp3'))
-                camera = await message.channel.send(phrase)
-                while vc.is_playing():
-                    await asyncio.sleep(1)
-                await camera.delete()
-            if not bgm_id == 0:
-                toBot = client.get_channel(bgm_id)
-                botmsg = await toBot.send('ML' + str(vc_id))
-            vc = await channel.connect()
-
-        waitemb = discord.Embed()
-
-        await asyncio.sleep(0.7)
-        if fes_flag == 1 and pink_flag == 10: waitemb.set_image(url='https://i.imgur.com/ZC8JK9i.gif')
-        else: waitemb.set_image(url='https://i.imgur.com/da2w9YS.gif')
-            
-        waitemb.set_footer(text=pickup_name[langint])
-        waitemb.set_image(url='https://i.imgur.com/da2w9YS.gif')
-        msg = await message.channel.send(message.author.mention, embed=waitemb)
-        await msg.add_reaction('👆')
-
-        await mlg_touch(msg,message,result,img,message.author,pickup_name[langint],vc,pink_flag,fes_flag,botmsg)
-            
-        if vc.is_connected():
-            while vc.is_playing():
-                await asyncio.sleep(2)
 
 async def gacha_reload(flag,message):
     global mlg_all, mlg_data
