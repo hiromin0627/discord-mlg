@@ -8,8 +8,8 @@ v2.2.0以降は以下のリンクからMLGデータベースを手動でダウ�
 **「gacha_data」**フォルダにダウンロードしたデータを**展開**してください。   
 ![Imgur](https://i.imgur.com/6bbbiVE.png)  
   
-データベースの内容はこちらのWikiページを確認してください  
-[ガシャデータベースの内容](https://github.com/hiromin0627/discord-mlg/wiki/ガシャデータベースの内容)  
+## 詳しい情報
+[こちら](https://hiromin.xyz/discordmlg/)のページで解説をしています。MLGv2.2.0以降用のガチャデータベースの内容も書いています。ご確認ください。  
   
 ## 導入方法
 1. Python 3.7以降を導入してください。
