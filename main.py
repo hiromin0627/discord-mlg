@@ -50,6 +50,7 @@ mlg_all = [[],[],[]]
 mlg_data = [[[],[],[],[],[],[]],[[],[],[],[],[],[]],[[],[],[],[],[],[]]]
 
 pickup_name = ['','','']
+pickup_img = ['','','']
 rarity_str = ['R','SR','SSR','FES']
 langnamelist = ['ja','cn','kr']
 
@@ -120,7 +121,8 @@ async def on_message(message):
                     lim = _('限定') if val[6] == 3 else ''
                     name += '［' + lim + rarity_str[val[5]] + '］' + val[1] + ' ' + val[0] + '\n'
 
-            emb = discord.Embed(title=_('現在のミリシタガシャピックアップはこちらです！！'), description=name)
+            emb = discord.Embed(title=_('ピックアップカード一覧'), description=name)
+            emb.set_image(url=pickup_img[langint])
             emb.set_author(name=pickup_name[langint])
             await message.channel.send('', embed=emb)
         elif message.content.startswith(prefix + 'call'):
@@ -543,6 +545,17 @@ async def gacha_reload(flag,message):
     name = ['','','']
     print(strtimestamp() + 'MLG temporary data cleaned.')
     if flag == 1: await msg.edit(content='MLG temporary data cleaned.')
+    
+    try:
+        with open('./gacha_data/pickup_url.csv',encoding="utf-8_sig") as f:
+            reader = csv.reader(f)
+            for langint,row in enumerate(reader):
+                pickup_img[langint] = row[0]
+        print('Pickup Images Links Loaded.')
+        if flag == 1: await msg.edit(content='Pickup Images Links Loaded.')
+    except:
+        print('[WARNING]Can`t Pickup Images Links Loaded.')
+        if flag == 1: await msg.edit(content='Can`t Pickup Images Links Loaded.')
 
     for langint,langname in enumerate(langnamelist):
         print(strtimestamp() + '[Step ' + str(langint + 1) + '/3 (lang:' + langname + ')]')
@@ -602,7 +615,8 @@ async def gacha_reload(flag,message):
         print(strtimestamp() + 'Loaded ' + str(len(mlg_all[langint])) + ' cards.([FES]' + str(fescount) + ', [SSR]' + str(ssrcount) + ', [SR]' + str(srcount) + ', [R]' + str(rcount) + ')')
         print(strtimestamp() + 'Pickup name is 「' + pickup_name[langint] + '」 ' + fesmode)
         print(strtimestamp() + 'Pickup cards')
-        for n in range(3,6):
+        pickup_listnum = [5,4,3]
+        for n in pickup_listnum:
             for val in mlg_data[langint][n]:
                 lim = _('限定') if val[6] == 3 else ''
                 print(strtimestamp() + '[' + lim + rarity_str[val[5]] + ']' + val[1] + ' ' + val[0])
