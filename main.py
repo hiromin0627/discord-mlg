@@ -1,7 +1,7 @@
 #coding: utf-8
 #created by @hiromin0627
 #MilliShita Gacha 2.2.2
-mlgbotver = '2.2.3'
+mlgbotver = '2.2.4'
 
 import glob
 import gettext
@@ -58,7 +58,7 @@ timer = 0
 
 @client.event
 async def on_ready():
-    print(strtimestamp() + '---MilliShita Gacha ' + mlgbotver + '---')
+    print(strtimestamp() + '---Millishita Gacha ' + mlgbotver + '---')
     print(strtimestamp() + 'discord.py ver:' + discord.__version__)
     print(strtimestamp() + 'Logged in as ' + client.user.name + '(ID:' + str(client.user.id) + ')')
     print(strtimestamp() + 'Bot created by @hiromin0627')
@@ -85,6 +85,17 @@ async def on_message(message):
     if message.content.startswith(prefix):
         if not aftermsgdel == 'false': await message.delete()
 
+        langint = 0
+        if not message.content == '':
+            if 'ja' in message.content[6:]:
+                langint = 0
+            elif 'cn' in message.content[6:]:
+                langint = 1
+            elif 'kr' in message.content[6:]:
+                langint = 2
+        else:
+            langint = langtoint()
+
         if message.content.startswith(prefix + "reload"):
             if timer > 0:
                 msgn = await message.channel.send(_('リロード直後です。') + str(timer) + _('秒後にお試しください。'))
@@ -94,7 +105,7 @@ async def on_message(message):
             await gacha_reload(1,message)
         elif message.content.startswith(prefix + 'cards'):
             print(strtimestamp() + 'Start MLGacha[cards].')
-            await gacha_note(message)
+            await gacha_note(message,langint)
         elif message.content.startswith(prefix + 'reset'):
             print(strtimestamp() + 'Start MLGacha[reset].')
             file_list = glob.glob("./gacha_count/*.txt")
@@ -103,23 +114,8 @@ async def on_message(message):
             await message.channel.send(_('すべてのユーザーのガチャカウントをリセットしました。'))
         elif message.content.startswith(prefix + 'pickup'):
             print(strtimestamp() + 'Start MLGacha[pickup].')
-            langint = 0
-            if not message.content[7:] == '':
-                if 'ja' in message.content[6:]:
-                    langint = 0
-                elif 'cn' in message.content[6:]:
-                    langint = 1
-                elif 'kr' in message.content[6:]:
-                    langint = 2
-            else:
-                langint = langtoint()
 
-            name = ''
-            pickup_listnum = [5,4,3]
-            for n in pickup_listnum:
-                for val in mlg_data[langint][n]:
-                    lim = _('限定') if val[6] == 3 else ''
-                    name += '［' + lim + rarity_str[val[5]] + '］' + val[1] + ' ' + val[0] + '\n'
+            name = pickupcheck(langint)
 
             emb = discord.Embed(title=_('ピックアップカード一覧'), description=name)
             emb.set_image(url=pickup_img[langint])
@@ -131,16 +127,6 @@ async def on_message(message):
             desc = ''
             char_list = list()
             carddata = []
-            langint = 0
-            if not message.content[5:] == '':
-                if 'ja' in message.content[4:]:
-                    langint = 0
-                elif 'cn' in message.content[4:]:
-                    langint = 1
-                elif 'kr' in message.content[4:]:
-                    langint = 2
-            else:
-                langint = langtoint()
 
             try:
                 with open('./gacha/' + langnamelist[langint] + str(message.author.id) + '.txt', 'r') as f:
@@ -185,14 +171,12 @@ async def on_message(message):
                 await msgn.delete()
                 return
 
-            if lang == 'ja': lang_data = 0
-            elif lang == 'cn': lang_data = 4
-            elif lang == 'kr': lang_data = 6
-            else: lang_data = 0
+            lang_data = [0,4,6]
+
             for data in imas.million_data:
-                if carddata[0] in data[lang_data]:
+                if carddata[0] in data[lang_data[langint]]:
                     color = data[3]
-                    cv = 'CV.' + data[lang_data + 1]
+                    cv = 'CV.' + data[lang_data[langint] + 1]
 
             desc = '[' + rarity_str[int(carddata[5])] + ']' + carddata[1] + ' ' + carddata[0]
             embmsg1 = discord.Embed(title=desc, description=cv, colour=color)
@@ -237,20 +221,8 @@ async def on_message(message):
 
             kind = ''
             result = []
-            img = ''
             
             gacha_count = int()
-
-            langint = 0
-            if 'ja' in message.content or 'cn' in message.content or 'kr' in message.content:
-                if 'ja' in message.content:
-                    langint = 0
-                elif 'cn' in message.content:
-                    langint = 1
-                elif 'kr' in message.content:
-                    langint = 2
-            else:
-                langint = langtoint()
 
             try:
                 with open('./gacha_count/' + langnamelist[langint] + str(message.author.id) + '.txt', 'r') as f:
@@ -264,14 +236,10 @@ async def on_message(message):
                 pickup_counter = 0
                 pickup_alllist = list()
 
-                name = ''
-                pickup_listnum = [5,4,3]
-                for n in pickup_listnum:
+                name = pickupcheck(langint)
+                for n in reversed(range(6, 3)):
                     for val in mlg_data[langint][n]:
-                        lim = _('限定') if val[6] == 3 else ''
                         pickup_alllist.append(val)
-                        name += '［' + lim + rarity_str[val[5]] + '］' + val[1] + ' ' + val[0] + '\n'
-                        pickup_counter += 1
 
                 mlgpickupemb = discord.Embed(title=_('交換カード一覧'), description=name)
                 mlgpickupemb.set_author(name=message.author.name, icon_url=message.author.avatar_url)
@@ -326,26 +294,9 @@ async def on_message(message):
 
                 result = [pickup_alllist[pickup_num]]
 
-                if result[0][5] >= 2: img = 'https://i.imgur.com/jWTTZ0d.gif'
-                elif result[0][5] == 1: img = 'https://i.imgur.com/vF7fDn3.gif'
-                else: img = 'https://i.imgur.com/hEHa49X.gif'
-
                 await msgs.delete()
 
                 print(strtimestamp() + 'Start MLChange[' + kind + '] by ' + str(message.author.id) + '.')
-
-                if vc_id == None:
-                    vc = None
-                    botmsg = None
-                else:
-                    if not bgm_id == 0:
-                        toBot = client.get_channel(bgm_id)
-                        botmsg = await toBot.send('ML' + str(vc_id))
-                    vc = await channel.connect()
-
-                await asyncio.sleep(0.7)
-                msg = await message.channel.send(message.author.mention + ' https://i.imgur.com/da2w9YS.gif')
-                await msg.add_reaction('👆')
                 
                 char_list = list()
                 try:
@@ -366,7 +317,16 @@ async def on_message(message):
                     newlistline = ''.join(char_list)
                     f.write(newlistline)
 
-                await mlg_touch(msg,message,result,img,message.author,kind,vc,20,0,botmsg)
+                if vc_id == None:
+                    vc = None
+                    botmsg = None
+                else:
+                    if not bgm_id == 0:
+                        toBot = client.get_channel(bgm_id)
+                        botmsg = await toBot.send('ML' + str(vc_id))
+                    vc = await channel.connect()
+
+                await mlg_touch(message,result,kind,vc,botmsg,langint)
 
                 if vc.is_connected():
                     while vc.is_playing():
@@ -380,10 +340,6 @@ async def on_message(message):
             if pickup_name[langint] == _('ミリオンフェス'):
                 ssr_rate = 9400
                 pick_rate = 198
-
-            fes_flag = 0
-            ssr_flag = 0
-            sr_flag = 0
 
             if '10' in message.content or '１０' in message.content:
                 role = 10
@@ -418,19 +374,15 @@ async def on_message(message):
                             result.append(srpick[random.randrange(len(srpick) - 1)])
                         else:
                             result.append(srpick[0])
-                        sr_flag = 1
                     elif rand >= 8740 and rand <= ssr_rate:
                         result.append(mlg_data[langint][1][random.randrange(len(mlg_data[langint][1]) - 1)])
-                        sr_flag = 1
                     elif rand >= ssr_rate and rand <= ssr_rate + pick_rate:
                         if len(mlg_data[langint][5]) > 1:
                             result.append(mlg_data[langint][5][random.randrange(len(mlg_data[langint][5]) - 1)])
                         else:
                             result.append(mlg_data[langint][5][0])
-                        ssr_flag = 1
                     elif rand >= ssr_rate + pick_rate:
                         result.append(mlg_data[langint][2][random.randrange(len(mlg_data[langint][2]) - 1)])
-                        ssr_flag = 1
                 elif n == 9:
                     rand = random.randint(0, 9999)
                     if rand >= 0 and rand <= 240:
@@ -438,39 +390,15 @@ async def on_message(message):
                             result.append(srpick[random.randrange(len(srpick) - 1)])
                         else:
                             result.append(srpick[0])
-                        sr_flag = 1
                     elif rand >= 240 and rand <= ssr_rate:
                         result.append(mlg_data[langint][1][random.randrange(len(mlg_data[langint][1]) - 1)])
-                        sr_flag = 1
                     elif rand >= ssr_rate and rand <= ssr_rate + pick_rate:
                         if len(mlg_data[langint][5]) > 1:
                             result.append(mlg_data[langint][5][random.randrange(len(mlg_data[langint][5]) - 1)])
                         else:
                             result.append(mlg_data[langint][5][0])
-                        ssr_flag = 1
                     elif rand >= ssr_rate + pick_rate:
                         result.append(mlg_data[langint][2][random.randrange(len(mlg_data[langint][2]) - 1)])
-                        ssr_flag = 1
-
-            if pickup_name[langint] == _('ミリオンフェス'):
-                for val in result:
-                    if val[5] == 3:
-                        fes_flag = 1
-
-            pink_flag = random.randint(1, 20)
-            if fes_flag == 1:
-                if pink_flag == 10:
-                    img = 'https://i.imgur.com/fGpfCgB.gif'
-                elif pink_flag == 20:
-                    img = 'https://i.imgur.com/jWTTZ0d.gif'
-                else:
-                    img = 'https://i.imgur.com/0DxyVhm.gif'
-            elif ssr_flag == 1 and not fes_flag == 1:
-                img = 'https://i.imgur.com/jWTTZ0d.gif'
-            elif sr_flag == 1 and not fes_flag == 1 and not ssr_flag == 1:
-                img = 'https://i.imgur.com/vF7fDn3.gif'
-            else:
-                img = 'https://i.imgur.com/hEHa49X.gif'
 
             print(strtimestamp() + 'Start MLGacha[' + pickup_name[langint] + '] by ' + message.author.name + '.')
 
@@ -495,21 +423,33 @@ async def on_message(message):
                     f.write(newlistline)
 
             mess = random.randint(1,10)
-            phrase = str()
-            if mess >= 2 and (ssr_flag == 1 or fes_flag == 1): phrase = _('最高の一枚ができましたのでぜひご確認ください！')
-            elif mess <= 4 and (sr_flag == 1 or ssr_flag == 1 or fes_flag == 1): phrase = _('みんなのいい表情が撮れました！')
-            elif mess > 4 and mess <= 8 and (sr_flag == 1 or ssr_flag == 1 or fes_flag == 1): phrase = _('楽しそうなところが撮れましたよ')
+            fes_flag = 0
+            ssr_flag = 0
+            sr_flag = 0
+            for val in result:
+                if val[5] == 3:
+                    fes_flag = 1
+                elif val[5] == 2:
+                    ssr_flag = 1
+                elif val[5] == 1:
+                    sr_flag = 1
+            phrase = [_('最高の一枚ができましたのでぜひご確認ください！'),_('みんなのいい表情が撮れました！'),_('楽しそうなところが撮れましたよ')]
+            cameratxt = ''
+            if mess >= 2 :
+                if ssr_flag == 1 or fes_flag == 1: cameratxt = phrase[0]
+                elif sr_flag == 1 or ssr_flag == 1 or fes_flag == 1: cameratxt = phrase[1]
+                elif sr_flag == 1 or ssr_flag == 1 or fes_flag == 1: cameratxt = phrase[2]
 
             if vc_id == None:
                 vc = None
                 botmsg = None
-                camera = await message.channel.send(phrase)
+                if not cameratxt == '': camera = await message.channel.send(cameratxt)
                 await asyncio.sleep(3)
                 await camera.delete()
             else:
-                if not len(phrase) == 0:
+                if not cameratxt == '':
                     vc.play(discord.FFmpegPCMAudio('./resources/message.mp3'))
-                    camera = await message.channel.send(phrase)
+                    camera = await message.channel.send(cameratxt)
                     while vc.is_playing():
                         await asyncio.sleep(1)
                     await camera.delete()
@@ -518,18 +458,7 @@ async def on_message(message):
                     botmsg = await toBot.send('ML' + str(vc_id))
                 vc = await channel.connect()
 
-            waitemb = discord.Embed()
-
-            await asyncio.sleep(0.7)
-            if fes_flag == 1 and pink_flag == 10: waitemb.set_image(url='https://i.imgur.com/ZC8JK9i.gif')
-            else: waitemb.set_image(url='https://i.imgur.com/da2w9YS.gif')
-                
-            waitemb.set_footer(text=pickup_name[langint])
-            waitemb.set_image(url='https://i.imgur.com/da2w9YS.gif')
-            msg = await message.channel.send(message.author.mention, embed=waitemb)
-            await msg.add_reaction('👆')
-
-            await mlg_touch(msg,message,result,img,message.author,pickup_name[langint],vc,pink_flag,fes_flag,botmsg)
+            await mlg_touch(message,result,pickup_name[langint],vc,botmsg,langint)
                 
             if vc.is_connected():
                 while vc.is_playing():
@@ -634,18 +563,8 @@ async def gacha_reload(flag,message):
 
     return
 
-async def gacha_note(message):
+async def gacha_note(message,langint):
     char_list = list()
-    langint = 0
-    if not message.content[7:] == '':
-        if 'ja' in message.content[6:]:
-            langint = 0
-        elif 'cn' in message.content[6:]:
-            langint = 1
-        elif 'kr' in message.content[6:]:
-            langint = 2
-    else:
-        langint = langtoint()
 
     try:
         with open('./gacha/' + langnamelist[langint] + str(message.author.id) + '.txt', 'r') as f:
@@ -705,30 +624,22 @@ async def gacha_note(message):
             if target_reaction.emoji == '◀' and user != msg.author:
                 if not now == 1:
                     now -= 1
-                    emb = discord.Embed(title=_('所持SSR一覧') + ' Page ' + str(now) + '/' + str(len(text)), description=text[now - 1])
-                    emb.set_author(name=message.author.name, icon_url=message.author.avatar_url)
-                    emb.set_footer(text=fotter_text)
-                    await msg.edit(embed=emb)
                 else:
                     now = len(text)
-                    emb = discord.Embed(title=_('所持SSR一覧') + ' Page ' + str(now) + '/' + str(len(text)), description=text[now - 1])
-                    emb.set_author(name=message.author.name, icon_url=message.author.avatar_url)
-                    emb.set_footer(text=fotter_text)
-                    await msg.edit(embed=emb)
+                emb = discord.Embed(title=_('所持SSR一覧') + ' Page ' + str(now) + '/' + str(len(text)), description=text[now - 1])
+                emb.set_author(name=message.author.name, icon_url=message.author.avatar_url)
+                emb.set_footer(text=fotter_text)
+                await msg.edit(embed=emb)
                 await msg.remove_reaction(target_reaction.emoji, user)
             elif target_reaction.emoji == '▶' and user != msg.author:
                 if not now == len(text):
                     now += 1
-                    emb = discord.Embed(title=_('所持SSR一覧') + ' Page ' + str(now) + '/' + str(len(text)), description=text[now - 1])
-                    emb.set_author(name=message.author.name, icon_url=message.author.avatar_url)
-                    emb.set_footer(text=fotter_text)
-                    await msg.edit(embed=emb)
                 else:
                     now = 1
-                    emb = discord.Embed(title=_('所持SSR一覧') + ' Page ' + str(now) + '/' + str(len(text)), description=text[now - 1])
-                    emb.set_author(name=message.author.name, icon_url=message.author.avatar_url)
-                    emb.set_footer(text=fotter_text)
-                    await msg.edit(embed=emb)
+                emb = discord.Embed(title=_('所持SSR一覧') + ' Page ' + str(now) + '/' + str(len(text)), description=text[now - 1])
+                emb.set_author(name=message.author.name, icon_url=message.author.avatar_url)
+                emb.set_footer(text=fotter_text)
+                await msg.edit(embed=emb)
                 await msg.remove_reaction(target_reaction, user)
             elif target_reaction.emoji == '❌' and user != msg.author:
                 await msg.delete()
@@ -741,17 +652,59 @@ async def gacha_note(message):
             await msg.delete()
             break
 
-async def mlg_touch(msg,message,result,img,author,kind,vc,pink_flag,fes_flag,botmsg):
-    langint = 0
-    if not message.content[7:] == '':
-        if 'ja' in message.content[6:]:
-            langint = 0
-        elif 'cn' in message.content[6:]:
-            langint = 1
-        elif 'kr' in message.content[6:]:
-            langint = 2
+async def mlg_touch(message,result,kind,vc,botmsg,langint):
+    fes_flag = 0
+    ssr_flag = 0
+    sr_flag = 0
+    author = message.author
+    
+    if kind == _('ミリオンフェス'):
+        for val in result:
+            if val[5] == 3:
+                fes_flag = 1
+                pink_flag = random.randint(1, 20)
+                if pink_flag == 10:
+                    img = 'https://i.imgur.com/fGpfCgB.gif'
+                elif pink_flag == 20:
+                    img = 'https://i.imgur.com/jWTTZ0d.gif'
+                else:
+                    img = 'https://i.imgur.com/0DxyVhm.gif'
+                break
+            elif val[5] == 2:
+                ssr_flag = 1
+            elif val[5] == 1:
+                sr_flag = 1
+
+        if not fes_flag == 1:
+            if ssr_flag == 1:
+                img = 'https://i.imgur.com/jWTTZ0d.gif'
+            elif sr_flag == 1 and not ssr_flag == 1:
+                img = 'https://i.imgur.com/vF7fDn3.gif'
+            else:
+                img = 'https://i.imgur.com/hEHa49X.gif'
     else:
-        langint = langtoint()
+        for val in result:
+            if val[5] == 2:
+                ssr_flag = 1
+                break
+            if val[5] == 1:
+                sr_flag = 1
+
+        if ssr_flag == 1:
+            img = 'https://i.imgur.com/jWTTZ0d.gif'
+        elif sr_flag == 1 and not ssr_flag == 1:
+            img = 'https://i.imgur.com/vF7fDn3.gif'
+        else:
+            img = 'https://i.imgur.com/hEHa49X.gif'
+
+    await asyncio.sleep(0.7)
+
+    waitemb = discord.Embed()
+    if fes_flag == 1 and pink_flag == 10: waitemb.set_image(url='https://i.imgur.com/ZC8JK9i.gif')
+    else: waitemb.set_image(url='https://i.imgur.com/da2w9YS.gif')
+    waitemb.set_footer(text=pickup_name[langint])
+    msg = await message.channel.send(message.author.mention, embed=waitemb)
+    await msg.add_reaction('👆')
 
     try:
         log = ''
@@ -767,7 +720,7 @@ async def mlg_touch(msg,message,result,img,author,kind,vc,pink_flag,fes_flag,bot
                 openemb.set_image(url=img)
                 await msg.edit(embed=openemb)
 
-                if vc.is_connected():
+                if not vc == None:
                     await asyncio.sleep(0.4)
                     if fes_flag == 1 and not pink_flag == 20:
                         vc.play(discord.FFmpegPCMAudio('./resources/open_fes.mp3'))
@@ -804,13 +757,13 @@ async def mlg_touch(msg,message,result,img,author,kind,vc,pink_flag,fes_flag,bot
             mlgnormalemb.set_footer(text=footer_text)
 
             mlgnormalemb.set_image(url=result_10[2])
-            if vc.is_connected(): vc.play(player_show)
+            if not vc == None: vc.play(player_show)
 
             #カード表示（SSRの場合特訓前）
             await msg.edit(content=author.mention, embed=mlgnormalemb)
 
             if result_10[5] >= 2:
-                if vc.is_connected():
+                if not vc == None:
                     while vc.is_playing():
                         await asyncio.sleep(1)
                     vc.play(discord.FFmpegPCMAudio('./resources/ssr_talk.mp3'))
@@ -831,11 +784,11 @@ async def mlg_touch(msg,message,result,img,author,kind,vc,pink_flag,fes_flag,bot
                 target_reaction2, user = await client.wait_for('reaction_add', timeout=timeout)
 
                 if target_reaction2.emoji == '👆' and user == author:
-                    if vc.is_connected() and vc.is_playing(): vc.stop()
+                    if not vc == None and vc.is_playing(): vc.stop()
                     count += 1
                     log += '[' + rarity_str[result_10[5]] + ']' + result_10[1] + ' ' + result_10[0] + '\n'
                     if count == len(result):
-                        if vc.is_connected():
+                        if not vc == None:
                             if not bgm_id == 0:
                                 await botmsg.add_reaction('⏹')
                             await vc.disconnect()
@@ -894,13 +847,13 @@ async def mlg_touch(msg,message,result,img,author,kind,vc,pink_flag,fes_flag,bot
                             mlgnormalemb.set_footer(text=footer_text)
 
                             mlgnormalemb.set_image(url=result_ssr[2])
-                            if vc.is_connected() and vc.is_playing():
+                            if not vc == None and vc.is_playing():
                                 vc.stop()
                                 vc.play(player_show)
 
                             await msg.edit(content=author.mention, embed=mlgnormalemb)
 
-                            if vc.is_connected():
+                            if not vc == None:
                                 while vc.is_playing():
                                     await asyncio.sleep(1)
                                 vc.play(discord.FFmpegPCMAudio('./resources/ssr_talk.mp3'))
@@ -920,12 +873,12 @@ async def mlg_touch(msg,message,result,img,author,kind,vc,pink_flag,fes_flag,bot
                                 target_reaction2, user = await client.wait_for('reaction_add')
 
                                 if target_reaction2.emoji == '👆' and user == author:
-                                    if vc.is_connected() and vc.is_playing(): vc.stop()
+                                    if not vc == None and vc.is_playing(): vc.stop()
                                     count += 1
                                     await msg.remove_reaction(target_reaction2.emoji, user)
                                     break
 
-                    if vc.is_connected():
+                    if not vc == None:
                         if not bgm_id == 0:
                             await botmsg.add_reaction('⏹')
                         await vc.disconnect()
@@ -949,7 +902,7 @@ async def mlg_touch(msg,message,result,img,author,kind,vc,pink_flag,fes_flag,bot
         print(strtimestamp() + 'MLGacha complete. ' + author.name + '`s result\n' + log)
     except TimeoutError:
         await msg.delete()
-        if vc.is_connected():
+        if not vc == None:
             await vc.disconnect()
         if not bgm_id == 0:
             await botmsg.add_reaction('⏹')
@@ -963,6 +916,15 @@ async def mlg_touch(msg,message,result,img,author,kind,vc,pink_flag,fes_flag,bot
         if not bgm_id == 0:
             toBot = client.get_channel(bgm_id)
             await toBot.send('disconnect') """
+
+def pickupcheck(langint):
+    name = ''
+    for n in reversed(range(6, 3)):
+        for val in mlg_data[langint][n]:
+            lim = _('限定') if val[6] == 3 else ''
+            name += '［' + lim + rarity_str[val[5]] + '］' + val[1] + ' ' + val[0] + '\n'
+            pickup_counter += 1
+    return name
 
 def langtoint():
     if lang == 'ja':
