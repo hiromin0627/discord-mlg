@@ -1,7 +1,7 @@
 #coding: utf-8
 #created by @hiromin0627
-#MilliShita Gacha 2.2.2
-mlgbotver = '2.2.4'
+#MilliShita Gacha 2.3.0
+mlgbotver = '2.3.0'
 
 import glob
 import gettext
@@ -127,20 +127,22 @@ async def on_message(message):
             desc = ''
             char_list = list()
             carddata = []
+            lang_data = [0,4,6]
 
             try:
                 with open('./gacha/' + langnamelist[langint] + str(message.author.id) + '.txt', 'r') as f:
                     listline = f.read()
                     char_list = list(listline)
             except:
-                pass
+                print(strtimestamp() + '[ERROR]Failed to load gacha result file.')
+                return
 
             if '制服シリーズ' in message.content[6:]:
                 for data in imas.million_data:
-                    if data[0] in message.content[6:]:
-                        for r,val in enumerate(mlg_all[langint]):
+                    if message.content[6:] in data[lang_data[langint]]:
+                        for val in mlg_all[langint]:
                             if val[0] in message.content[6:] and val[1] == '制服シリーズ':
-                                if char_list[r] == '1':
+                                if char_list[val[7]] == '1':
                                     carddata = val
                 if len(carddata) == 0:
                     msgn = await message.channel.send(_('制服シリーズの場合、アイドル名も同時に入力する必要があります。'))
@@ -149,10 +151,10 @@ async def on_message(message):
                     return
             elif 'シアターデイズ' in message.content[6:] or '劇場時光' in message.content[6:] or '시어터 데이즈' in message.content[6:]:
                 for data in imas.million_data:
-                    if data[0] in message.content[6:]:
-                        for r,val in enumerate(mlg_all[langint]):
+                    if message.content[6:] in data[lang_data[langint]]:
+                        for val in mlg_all[langint]:
                             if val[0] in message.content[6:] and (val[1] == 'シアターデイズ' or val[1] == '劇場時光' or val[1] == '시어터 데이즈'):
-                                if char_list[r] == '1':
+                                if char_list[val[7]] == '1':
                                     carddata = val
                 if len(carddata) == 0:
                     msgn = await message.channel.send(_('シアターデイズの場合、アイドル名も同時に入力する必要があります。'))
@@ -160,9 +162,9 @@ async def on_message(message):
                     await msgn.delete()
                     return
             else:
-                for r,val in enumerate(mlg_all[langint]):
+                for val in mlg_all[langint]:
                     if val[1] in message.content[6:]:
-                        if char_list[r] == '1':
+                        if char_list[val[7]] == '1':
                             carddata = val
 
             if len(carddata) == 0:
@@ -170,8 +172,6 @@ async def on_message(message):
                 await asyncio.sleep(10)
                 await msgn.delete()
                 return
-
-            lang_data = [0,4,6]
 
             for data in imas.million_data:
                 if carddata[0] in data[lang_data[langint]]:
@@ -237,9 +237,11 @@ async def on_message(message):
                 pickup_alllist = list()
 
                 name = pickupcheck(langint)
-                for n in reversed(range(6, 3)):
+                for n in reversed(range(3, 6)):
                     for val in mlg_data[langint][n]:
-                        pickup_alllist.append(val)
+                        if val[6] >= 2:
+                            pickup_alllist.append(val)
+                            pickup_counter += 1
 
                 mlgpickupemb = discord.Embed(title=_('交換カード一覧'), description=name)
                 mlgpickupemb.set_author(name=message.author.name, icon_url=message.author.avatar_url)
@@ -327,10 +329,6 @@ async def on_message(message):
                     vc = await channel.connect()
 
                 await mlg_touch(message,result,kind,vc,botmsg,langint)
-
-                if vc.is_connected():
-                    while vc.is_playing():
-                        await asyncio.sleep(2)
                 return
 
             role = 0
@@ -459,10 +457,6 @@ async def on_message(message):
                 vc = await channel.connect()
 
             await mlg_touch(message,result,pickup_name[langint],vc,botmsg,langint)
-                
-            if vc.is_connected():
-                while vc.is_playing():
-                    await asyncio.sleep(2)
 
 async def gacha_reload(flag,message):
     global mlg_all, mlg_data
@@ -544,8 +538,7 @@ async def gacha_reload(flag,message):
         print(strtimestamp() + 'Loaded ' + str(len(mlg_all[langint])) + ' cards.([FES]' + str(fescount) + ', [SSR]' + str(ssrcount) + ', [SR]' + str(srcount) + ', [R]' + str(rcount) + ')')
         print(strtimestamp() + 'Pickup name is 「' + pickup_name[langint] + '」 ' + fesmode)
         print(strtimestamp() + 'Pickup cards')
-        pickup_listnum = [5,4,3]
-        for n in pickup_listnum:
+        for n in reversed(range(3, 6)):
             for val in mlg_data[langint][n]:
                 lim = _('限定') if val[6] == 3 else ''
                 print(strtimestamp() + '[' + lim + rarity_str[val[5]] + ']' + val[1] + ' ' + val[0])
@@ -728,6 +721,8 @@ async def mlg_touch(message,result,kind,vc,botmsg,langint):
                         vc.play(discord.FFmpegPCMAudio('./resources/open.mp3'))
                     while vc.is_playing():
                         await asyncio.sleep(1)
+                else:
+                    await asyncio.sleep(6)
                 break
 
         while count < len(result):
@@ -919,11 +914,11 @@ async def mlg_touch(message,result,kind,vc,botmsg,langint):
 
 def pickupcheck(langint):
     name = ''
-    for n in reversed(range(6, 3)):
+    for n in reversed(range(3, 6)):
         for val in mlg_data[langint][n]:
             lim = _('限定') if val[6] == 3 else ''
             name += '［' + lim + rarity_str[val[5]] + '］' + val[1] + ' ' + val[0] + '\n'
-            pickup_counter += 1
+    print(name)
     return name
 
 def langtoint():
