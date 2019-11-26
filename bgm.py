@@ -25,14 +25,14 @@ async def on_message(message):
     if not message.author.bot:
         return
 
-    if message.content.startswith("ML"):
+    if message.content.startswith("ML") and not message.content[2:] == '':
         channel = client.get_channel(int(message.content[2:]))
         vc = await channel.connect()
         print('connected')
         vc.play(discord.FFmpegPCMAudio('./resources/mlg_bgm.mp3'))
         while True:
             target_reaction, user = await client.wait_for('reaction_add')
-            if target_reaction.emoji == '⏹':
+            if target_reaction.emoji == '⏹' and user == message.author:
                 await vc.disconnect()
                 print('disconnected')
         while vc.is_connected():
