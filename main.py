@@ -1,7 +1,7 @@
 #coding: utf-8
 #created by @hiromin0627
-#MilliShita Gacha 3.0.0
-mlgbotver = '3.0.0'
+#MilliShita Gacha 3.0.1
+mlgbotver = '3.0.1'
 
 import glob
 import gettext
@@ -116,11 +116,10 @@ async def on_message(message):
                 with open('./gacha_data/version.json', 'w') as f:
                     pre = {"date": "Data unavailable. Please update mlg data.","dlurl": ""}
                     json.dump(pre, f)
+                    current = pre
 
             if latest["date"] == current["date"]:
                 msgl = await message.channel.send('現在のガシャデータベースは最新のものが使われています。')
-                await asyncio.sleep(10)
-                await msgl.delete()
                 return
             else:
                 msgl = await message.channel.send('最新のガシャデータベース：' + latest["date"] + '\n現在のガシャデータベース：' + current["date"] + '\nアップデートしますか？')
@@ -135,26 +134,20 @@ async def on_message(message):
                             await msgl.edit(content='アップデートを開始します。')
                             url = latest["dlurl"]
                             if await gacha_update(url):
+                                await msgl.clear_reactions()
                                 with open('./gacha_data/version.json', 'w') as f:
                                     json.dump(latest, f)
                                 await msgl.edit(content='アップデートが完了しました。')
-                                await asyncio.sleep(10)
-                                await msgl.delete()
+                                await gacha_reload(1, message)
                                 return
                             else:
                                 await msgl.edit(content='アップデートに失敗しました。もう一度やり直してください。')
-                                await asyncio.sleep(10)
-                                await msgl.delete()
                                 return
                         if target_reaction.emoji == '❌' and user != msgl.author:
                             await msgl.edit(content='アップデートを中止します。')
-                            await asyncio.sleep(10)
-                            await msgl.delete()
                             return
                     except:
                         await msgl.edit(content='コマンドに失敗しました。もう一度やり直してください。')
-                        await asyncio.sleep(10)
-                        await msgl.delete()
                         return
         elif message.content.startswith(prefix + 'cards'):
             print(strtimestamp() + 'Start MLGacha[cards].')
