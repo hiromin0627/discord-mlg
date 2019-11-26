@@ -35,7 +35,6 @@ async def on_message(message):
             if target_reaction.emoji == '⏹' and user == message.author:
                 await vc.disconnect()
                 print('disconnected')
-        while vc.is_connected():
-            await asyncio.sleep(1)
+                break
 
 client.run(token)

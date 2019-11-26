@@ -1,7 +1,7 @@
 #coding: utf-8
 #created by @hiromin0627
-#MilliShita Gacha 2.3.0
-mlgbotver = '2.3.0'
+#MilliShita Gacha 3.0.0
+mlgbotver = '3.0.0'
 
 import glob
 import gettext
@@ -194,7 +194,7 @@ async def on_message(message):
             if gacha_count >= 300:
                 await gacha_prepare_select(message,langint)
             else:
-                await gacha_prepare(message,langint)
+                await gacha_prepare(message,langint,gacha_count)
 
 async def gacha_prepare_select(message,langint):
     try:
@@ -279,7 +279,7 @@ async def gacha_prepare_select(message,langint):
     await mlg_touch(message,result,kind,vc,botmsg,langint)
     return
 
-async def gacha_prepare(message,langint):
+async def gacha_prepare(message,langint,gacha_count):
     try:
         vc_id = message.author.voice.channel.id
         channel = client.get_channel(vc_id)
@@ -402,6 +402,7 @@ async def gacha_prepare(message,langint):
             await asyncio.sleep(3)
             await camera.delete()
     else:
+        vc = await channel.connect()
         if not cameratxt == '':
             vc.play(discord.FFmpegPCMAudio('./resources/message.mp3'))
             camera = await message.channel.send(cameratxt)
@@ -411,7 +412,6 @@ async def gacha_prepare(message,langint):
         if not bgm_id == 0:
             toBot = client.get_channel(bgm_id)
             botmsg = await toBot.send('ML' + str(vc_id))
-        vc = await channel.connect()
 
     await mlg_touch(message,result,pickup_name[langint],vc,botmsg,langint)
 
@@ -875,7 +875,7 @@ async def mlg_touch(message,result,kind,vc,botmsg,langint):
                         mlglogemb.set_footer(text=footer_text)
                         await toLog.send(embed=mlglogemb)
 
-                        return
+                        break
                     else:
                         await msg.remove_reaction(target_reaction2.emoji, user)
                     break
@@ -954,7 +954,7 @@ async def mlg_touch(message,result,kind,vc,botmsg,langint):
                         with open('./gacha_count/' + langnamelist[langint] + str(message.author.id) + '.txt', 'r') as f:
                             gacha_count = f.read()
                     except:
-                        print(strtimestamp() + '[ERROR]Gacha count FAILED.')
+                        print(strtimestamp() + '[ERROR]Gacha count read FAILED.')
 
                     count += 10
                     await msg.delete()
