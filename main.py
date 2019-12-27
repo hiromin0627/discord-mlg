@@ -284,7 +284,7 @@ async def gacha_prepare(message,langint,gacha_count):
     ssr_rate = 9700
     pick_rate = 99
 
-    if pickup_name[langint] == _('ミリオンフェス'):
+    if pickup_name[langint] == 'ミリオンフェス' or pickup_name[langint] == '百萬祭典' or pickup_name[langint] == '밀리언 페스티벌':
         ssr_rate = 9400
         pick_rate = 198
 
@@ -715,7 +715,7 @@ async def mlg_touch(message,result,kind,vc,botmsg,langint):
     sr_flag = 0
     author = message.author
     
-    if kind == _('ミリオンフェス'):
+    if kind == 'ミリオンフェス' or kind == '百萬祭典' or kind == '밀리언 페스티벌':
         for val in result:
             if val[5] == 3:
                 fes_flag = 1

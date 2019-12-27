@@ -90,7 +90,7 @@ msgstr "Exchange Dream Stars"
 
 #: ./main.py:362 ./main.py:437
 msgid "ミリオンフェス"
-msgstr "Million Fes"
+msgstr "밀리언 페스티벌"
 
 #: ./main.py:481
 msgid "最高の一枚ができましたのでぜひご確認ください！"
