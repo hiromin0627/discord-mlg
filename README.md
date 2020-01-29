@@ -3,7 +3,7 @@ PythonベースのDiscord用ボットのアイドルマスターミリオンラ�
 現状、Discord.pyが音声を二重再生させることができない（わからない）ため、BGMを鳴らす場合は2つのボットを作成する必要がある。
   
 ### MLG v4へようこそ
-- 初回起動時に自動的にMLGデータベースをダウンロードするようになりました。
+- 初回起動時に自動的にMLGデータベースをダウンロードします。
 - 「MLupdate」と打ち込んでいただくと、最新のものをダウンロードすることができます。
 - 手動で過去のバージョンのデータベースを「MLreload」で読み込ませることもできます。
   
@@ -74,5 +74,5 @@ PythonベースのDiscord用ボットのアイドルマスターミリオンラ�
 - [アイドルマスターミリオンライブシアターデイズ公式ツイッター](https://twitter.com/imasml_theater)
 - [韓国版アイドルマスターミリオンライブシアターデイズ公式ツイッター](https://twitter.com/imasmltd_kr)
 - [中国語繁体字版アイドルマスターミリオンライブシアターデイズ公式FaceBook](https://www.facebook.com/idolmastermlTD.ch/)
-- カード情報参考サイト Fantasia | [matsurihi.me](https://mltd.matsurihi.me/)
-- カード情報参考・画像サイト | [アイドルマスター ミリオンライブ！ シアターデイズDB【ミリシタDB】](https://imas.gamedbs.jp/mlth/)
+- カード情報参考サイト [Fantasia | matsurihi.me](https://mltd.matsurihi.me/)
+- カード情報参考・画像サイト [アイドルマスター ミリオンライブ！ シアターデイズDB【ミリシタDB】](https://imas.gamedbs.jp/mlth/)
