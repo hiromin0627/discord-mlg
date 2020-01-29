@@ -14,7 +14,7 @@ client = discord.Client()
 
 @client.event
 async def on_ready():
-    print('---BGM player for MLG v1.1.0---')
+    print('---BGM player for MLG v1.2.0---')
     print('discord.py ver:' + discord.__version__)
     print('Logged in as ' + client.user.name + '(ID:' + str(client.user.id) + ')')
     print('Bot created by @hiromin0627')
@@ -25,7 +25,7 @@ async def on_message(message):
     if not message.author.bot:
         return
 
-    if message.content.startswith("ML") and not message.content[2:] == '':
+    if message.content.startswith("ML") and not message.content[2:] == '' and is_int(message.content[2:]):
         channel = client.get_channel(int(message.content[2:]))
         vc = await channel.connect()
         print('connected')
@@ -36,5 +36,12 @@ async def on_message(message):
                 await vc.disconnect()
                 print('disconnected')
                 break
+
+def is_int(s):
+  try:
+    int(s)
+  except:
+    return False
+  return True
 
 client.run(token)
