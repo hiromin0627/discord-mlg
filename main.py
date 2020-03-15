@@ -58,7 +58,7 @@ async def on_ready():
     print(strtimestamp() + 'discord.py ver:' + discord.__version__)
     print(strtimestamp() + 'Logged in as ' + client.user.name + '(ID:' + str(client.user.id) + ')')
     print(strtimestamp() + 'Bot created by @hiromin0627')
-    await gacha_reload(0,None)
+    await gacha_reload(0,None,version)
 
 @client.event
 async def on_message(message):
@@ -71,7 +71,6 @@ async def on_message(message):
         await message.channel.send('ミリシタガシャシミュレーターDiscordボット ' + mlgbotver + '\n' +\
             'MLhelp：ヘルプコマンドです。ミリシタガシャの説明を見ることができます。\n' +\
             prefix + 'update：ミリシタガシャデータベースをダウンロードして更新します。\n' +\
-            prefix + 'reload：ミリシタガシャデータベースをローカルファイルを用いて更新します。\n' +\
             prefix + 'reset：全ユーザーのMLガシャを引いた回数をリセットします。\n' +\
             prefix + 'cards：MLガシャで引いたカード名を確認することができます。\n' +\
             prefix + 'pickup：現在のガシャ名とピックアップカードを確認できます。\n' +\
@@ -90,9 +89,7 @@ async def on_message(message):
         else:
             langint = langtoint()
 
-        if message.content.startswith(prefix + "reload"):
-            await gacha_reload(1,message)
-        elif message.content.startswith(prefix + "update"):
+        if message.content.startswith(prefix + "update"):
             global version
             latest = gacha_check_update()
 
@@ -197,14 +194,8 @@ async def gacha_prepare_select(message,langint):
     pickup_alllist = list()
 
     name = pickupcheck(langint)
-    global version
-    url = "https://data.hiromin.xyz/gachadata"
-    readObj = request.urlopen(url)
-    response = readObj.read()
-    data = json.loads(response)
-    pickup_id = data[version]["pickupIDs"]
     for row in mlg_data[langint]:
-        if row["id"] in pickup_id:
+        if row["id"] in pickup_id[langint]:
             pickup_alllist.append(row)
             pickup_counter += 1
 
@@ -493,8 +484,8 @@ def gacha_check_update():
     data = json.loads(response)
     return data
 
-async def gacha_reload(flag,message):
-    global mlg_all, mlg_data, pickup_id, version
+async def gacha_reload(flag,message,version="Latest"):
+    global mlg_all, mlg_data, pickup_id
     print(strtimestamp() + '----------[MLG ' + mlgbotver + ' MLreload]----------')
     if flag == 1: msg = await message.channel.send('MLreload Start.')
     
@@ -923,7 +914,7 @@ def voicecheck():
         return False
 
 def pickupcheck(langint):
-    global version, pickup_id
+    global pickup_id
     name = ''
     for row in mlg_data[langint]:
         if row["id"] in pickup_id[langint]:
