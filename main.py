@@ -1,7 +1,7 @@
 #coding: utf-8
 #created by @hiromin0627
-#MilliShita Gacha v4
-mlgbotver = '4.0.0'
+#MilliShita Gacha v5
+mlgbotver = '5.0.0_beta'
 
 import glob
 import gettext
@@ -20,12 +20,7 @@ ini.read('./config.ini', 'UTF-8')
 
 lang = ini['Language']['lang']
 
-path_to_locale_dir = os.path.abspath(
-    os.path.join(
-        os.path.dirname(__file__),
-        './locale'
-    )
-)
+path_to_locale_dir = os.path.abspath(os.path.join(os.path.dirname(__file__),'./locale'))
 if lang == 'cn': translang = 'zh_TW'
 elif lang == 'kr': translang = 'ko_KR'
 else: translang = 'ja_JP'
@@ -37,6 +32,8 @@ token = ini['tokens']['token']
 bgm_id = int(ini['ids']['bgm-room'])
 log_id = int(ini['ids']['log-room'])
 
+version = ini['Data']['Version']
+
 prefix = ini['Prefix']['commandprefix']
 
 timeout = float(ini['Reaction']['timeout'])
@@ -46,6 +43,7 @@ client = discord.Client()
 
 mlg_all = [[],[],[]]
 mlg_data = [[],[],[]]
+pickup_id = [[],[],[]]
 
 pickup_name = ['','','']
 pickup_img = ['','','']
@@ -95,6 +93,7 @@ async def on_message(message):
         if message.content.startswith(prefix + "reload"):
             await gacha_reload(1,message)
         elif message.content.startswith(prefix + "update"):
+            global version
             latest = gacha_check_update()
 
             current = dict()
@@ -110,10 +109,16 @@ async def on_message(message):
             if latest["date"] == current["date"]:
                 msgl = await message.channel.send('現在のガシャデータベースは最新のものが使われています。')
                 return
+            elif not version == "Latest":
+                msgl = await message.channel.send('バージョンが設定ファイルで指定されています。最新のガシャデータベース：' + latest["date"] + '\n現在のガシャデータベース：' + current["date"] + '\n設定を「Latest」に上書きしてアップデートしますか？')
+                await msgl.add_reaction('⭕')
+                await msgl.add_reaction('❌')
+                flag = 1
             else:
                 msgl = await message.channel.send('最新のガシャデータベース：' + latest["date"] + '\n現在のガシャデータベース：' + current["date"] + '\nアップデートしますか？')
                 await msgl.add_reaction('⭕')
                 await msgl.add_reaction('❌')
+                flag = 0
 
                 while True:
                     try:
@@ -121,17 +126,16 @@ async def on_message(message):
 
                         if target_reaction.emoji == '⭕' and user != msgl.author:
                             await msgl.edit(content='アップデートを開始します。')
-                            url = latest["dlurl"]
-                            if await gacha_update(url):
-                                await msgl.clear_reactions()
-                                with open('./gacha_data/version.json', 'w') as f:
-                                    json.dump(latest, f)
-                                await msgl.edit(content='アップデートが完了しました。')
-                                await gacha_reload(1, message)
-                                return
-                            else:
-                                await msgl.edit(content='アップデートに失敗しました。もう一度やり直してください。')
-                                return
+                            await msgl.clear_reactions()
+                            version = latest["date"]
+                            if flag == 1:
+                                ini.set("Data", "Version", "Latest")
+                                ini.write(open('./config.ini', 'w'), 'UTF-8')
+                            with open('./gacha_data/version.json', 'w') as f:
+                                json.dump(latest, f)
+                            await gacha_reload(1, message)
+                            await msgl.edit(content='アップデートが完了しました。')
+                            return
                         if target_reaction.emoji == '❌' and user != msgl.author:
                             await msgl.edit(content='アップデートを中止します。')
                             return
@@ -193,8 +197,14 @@ async def gacha_prepare_select(message,langint):
     pickup_alllist = list()
 
     name = pickupcheck(langint)
+    global version
+    url = "https://data.hiromin.xyz/gachadata"
+    readObj = request.urlopen(url)
+    response = readObj.read()
+    data = json.loads(response)
+    pickup_id = data[version]["pickupIDs"]
     for row in mlg_data[langint]:
-        if row["pickup"] == True:
+        if row["id"] in pickup_id:
             pickup_alllist.append(row)
             pickup_counter += 1
 
@@ -296,17 +306,17 @@ async def gacha_prepare(message,langint,gacha_count):
     ssrcard = list()
 
     for row in mlg_data[langint]:
-        if row["rarity"] == 0 and row["pickup"]:
+        if row["rarity"] == 0 and row["id"] in pickup_id[langint]:
             rpick.append(row)
-        elif row["rarity"] == 0 and not row["pickup"]:
+        elif row["rarity"] == 0 and not row["id"] in pickup_id[langint]:
             rcard.append(row)
-        elif row["rarity"] == 1 and row["pickup"]:
+        elif row["rarity"] == 1 and row["id"] in pickup_id[langint]:
             srpick.append(row)
-        elif row["rarity"] == 1 and not row["pickup"]:
+        elif row["rarity"] == 1 and not row["id"] in pickup_id[langint]:
             srcard.append(row)
-        elif row["rarity"] >= 2 and row["pickup"]:
+        elif row["rarity"] >= 2 and row["id"] in pickup_id[langint]:
             ssrpick.append(row)
-        elif row["rarity"] >= 2 and not row["pickup"]:
+        elif row["rarity"] >= 2 and not row["id"] in pickup_id[langint]:
             ssrcard.append(row)
 
     if len(rpick) == 0: rpick = rcard
@@ -483,74 +493,91 @@ def gacha_check_update():
     data = json.loads(response)
     return data
 
-async def gacha_update(url):
-    print('MLupdate Start.')
-    request.urlretrieve(url,'./gacha_data/mlg_data.json')
-    print('Package downloaded.')
-    if os.path.exists('./gacha_data/mlg_data.json'):
-        return True
-    else:
-        return False
-
 async def gacha_reload(flag,message):
-    global mlg_all, mlg_data
+    global mlg_all, mlg_data, pickup_id, version
     print(strtimestamp() + '----------[MLG ' + mlgbotver + ' MLreload]----------')
     if flag == 1: msg = await message.channel.send('MLreload Start.')
     
     mlg_all = [[],[],[]]
     mlg_data = [[],[],[]]
+    pickup_id = [[],[],[]]
     name = ['','','']
     print(strtimestamp() + 'MLG temporary data cleaned.')
     if flag == 1: await msg.edit(content='MLG temporary data cleaned.')
 
-    if not os.path.exists('./gacha_data/mlg_data.json'):
-        print(strtimestamp() + 'MLG data not found. Try to download data.')
-        latest = gacha_check_update()
-        url = latest["dlurl"]
-        while True:
-            if await gacha_update(url):
-                break
-            else:
-                print(strtimestamp() + 'First MLG data download failed. Rerun after 10 seconds.')
-                await asyncio.sleep(10)
+    url = "https://data.hiromin.xyz/"
+
+    if version == "Latest":
+        readObj_latest = request.urlopen(url+"latest")
+        response = readObj_latest.read()
+        data = json.loads(response)
+        mlgver = str(data["date"])
+        with open('./gacha_data/version.json', 'w') as f:
+            json.dump(data, f)
+    else:
+        data = {"date": version}
+        mlgver = version
+        with open('./gacha_data/version.json', 'w') as f:
+            json.dump(data, f)
+
+    print(strtimestamp() + 'Using version "' + mlgver + '". Start to load card datas.')
     
-    with open('./gacha_data/mlg_data.json',encoding="utf-8_sig") as f:
-        reader = json.load(f)
+    readObj_gachadata = request.urlopen(url+"gachadata")
+    response_gachadata = readObj_gachadata.read()
+    info = json.loads(response_gachadata)
 
-        for langint,langname in enumerate(langnamelist):
-            count = [0,0,0,0]
-            print('[Step ' + str(langint + 1) + '/3 (Lang:' + langname + ')]')
-            if flag == 1: await msg.edit(content='MLG Database Loading... \nStep ' + str(langint + 1) + '/3 (Lang:' + langname + ')')
+    for langint,langname in enumerate(langnamelist):
+        pickup_id[langint] = info[mlgver]["pickupIDs"][langname]
+    
+    readObj_cards = request.urlopen(url+"cards")
+    response_cards = readObj_cards.read()
+    reader = json.loads(response_cards)
 
-            pickup_img[langint] = reader[langname]["info"]["gachaImageUrl"]
-            pickup_name[langint] = reader[langname]["info"]["gachaName"]
-            
-            mlg_all[langint] = reader[langname]["cards"]
-            for row in reader[langname]["cards"]:
-                if row["active"] == True:
-                    mlg_data[langint].append(row)
-                    count[row["rarity"]] += 1
-                elif row["rarity"] == 3 and reader[langname]["info"]["fes"]:
-                    mlg_data[langint].append(row)
-                    count[row["rarity"]] += 1
+    for langint,langname in enumerate(langnamelist):
+        count = [0,0,0,0]
+        print('[Step ' + str(langint + 1) + '/3 (Lang:' + langname + ')]')
+        if flag == 1: await msg.edit(content='MLG Database Loading... \nStep ' + str(langint + 1) + '/3 (Lang:' + langname + ')')
 
-            print('Pickup name is 「' + pickup_name[langint] + '」')
-            print('Pickup cards')
-            for row in mlg_data[langint]:
-                if row["pickup"] == True:
-                    lim = _('限定') if row["limited"] == True else ''
-                    print('[' + lim + rarity_str[row["rarity"]] + ']' + row["name"] + ' ' + row["idol"] + ' (CV.' + row["cv"] + ')')
-                    name[langint] += '［' + lim + rarity_str[row["rarity"]] + '］' + row["name"] + ' ' + row["idol"] + ' (CV.' + row["cv"] + ')\n'
-            print('Actived ' + str(len(mlg_data[langint])) + ' cards.([FES]' + str(count[3]) + ', [SSR]' + str(count[2]) + ', [SR]' + str(count[1]) + ', [R]' + str(count[0]) + ')')
-
-        print('Loaded cards. (Japanese:' + str(len(mlg_all[0])) + ', Korea:' + str(len(mlg_all[1])) + ', China:' + str(len(mlg_all[2])) + ')')
+        pickup_img[langint] = info[mlgver]["gachaImageUrl"][langname]
+        pickup_name[langint] = info[mlgver]["gachaName"][langname]
         
-        emb = discord.Embed(title='Pickup Cards')
-        emb.add_field(name='Japanese:' + pickup_name[0], value=name[0])
-        emb.add_field(name='Korean:' + pickup_name[1], value=name[1])
-        emb.add_field(name='Chinese:' + pickup_name[2], value=name[2])
+        mlg_all[langint] = reader[langname]
+        if not len(info[mlgver]["activeIDs"][langname]) == 0:
+            pickup_id[langint] = info[mlgver]["activeIDs"][langname]
+            for row in reader[langname]:
+                if row["id"] in info[mlgver]["activeIDs"][langname]:
+                    mlg_data[langint].append(row)
+                    count[row["rarity"]] += 1
+        else:
+            pickup_id[langint] = info[mlgver]["pickupIDs"][langname]
+            for row in reader[langname]:
+                if not row["limited"]:
+                    mlg_data[langint].append(row)
+                    count[row["rarity"]] += 1
+                elif row["limited"] and row["id"] in pickup_id[langint]:
+                    mlg_data[langint].append(row)
+                    count[row["rarity"]] += 1
+                elif row["rarity"] == 3 and info[mlgver]["fes"][langname]:
+                    mlg_data[langint].append(row)
+                    count[row["rarity"]] += 1
 
-        if flag == 1: await msg.edit(content='All MLreload process completed successfully.', embed=emb)
+        print('Pickup name is 「' + pickup_name[langint] + '」')
+        print('Pickup cards')
+        for row in mlg_data[langint]:
+            if row["id"] in pickup_id[langint]:
+                lim = _('限定') if row["limited"] == True else ''
+                print('[' + lim + rarity_str[row["rarity"]] + ']' + row["name"] + ' ' + row["idol"] + ' (CV.' + row["cv"] + ')')
+                name[langint] += '［' + lim + rarity_str[row["rarity"]] + '］' + row["name"] + ' ' + row["idol"] + ' (CV.' + row["cv"] + ')\n'
+        print('Actived ' + str(len(mlg_data[langint])) + ' cards.([FES]' + str(count[3]) + ', [SSR]' + str(count[2]) + ', [SR]' + str(count[1]) + ', [R]' + str(count[0]) + ')')
+
+    print('Loaded cards. (Japanese:' + str(len(mlg_all[0])) + ', Korea:' + str(len(mlg_all[1])) + ', China:' + str(len(mlg_all[2])) + ')')
+    
+    emb = discord.Embed(title='Pickup Cards')
+    emb.add_field(name='Japanese:' + pickup_name[0], value=name[0])
+    emb.add_field(name='Korean:' + pickup_name[1], value=name[1])
+    emb.add_field(name='Chinese:' + pickup_name[2], value=name[2])
+
+    if flag == 1: await msg.edit(content='All MLreload process completed successfully.', embed=emb)
 
     print(strtimestamp() + 'All MLreload process completed successfully.')
     print(strtimestamp() + '-----------------------------------------')
@@ -896,10 +923,11 @@ def voicecheck():
         return False
 
 def pickupcheck(langint):
+    global version, pickup_id
     name = ''
     for row in mlg_data[langint]:
-        if row["pickup"] == True:
-            lim = '限定' if row["limited"] == True else ''
+        if row["id"] in pickup_id[langint]:
+            lim = _('限定') if row["limited"] == True else ''
             name += '［' + lim + rarity_str[row["rarity"]] + '］' + row["name"] + ' ' + row["idol"] + ' (CV.' + row["cv"] + ')\n'
     print(name)
     return name
@@ -907,10 +935,20 @@ def pickupcheck(langint):
 def langtoint():
     if lang == 'ja':
         return 0
-    elif lang == 'cn':
-        return 1
     elif lang == 'kr':
+        return 1
+    elif lang == 'cn':
         return 2
+    else:
+        return 0
+
+def langtostr(langint):
+    if langint == 0:
+        return 'ja'
+    elif langint == 1:
+        return 'kr'
+    elif langint == 2:
+        return 'cn'
     else:
         return 0
 
