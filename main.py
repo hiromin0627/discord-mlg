@@ -513,12 +513,12 @@ async def gacha_reload(flag,message,version="Latest"):
 
     print(strtimestamp() + 'Using version "' + mlgver + '". Start to load card datas.')
     
-    readObj_gachadata = request.urlopen(url+"gachadata")
+    readObj_gachadata = request.urlopen(url+"gachadata/"+mlgver)
     response_gachadata = readObj_gachadata.read()
     info = json.loads(response_gachadata)
 
     for langint,langname in enumerate(langnamelist):
-        pickup_id[langint] = info[mlgver]["pickupIDs"][langname]
+        pickup_id[langint] = info["pickupIDs"][langname]
     
     readObj_cards = request.urlopen(url+"cards")
     response_cards = readObj_cards.read()
@@ -529,26 +529,29 @@ async def gacha_reload(flag,message,version="Latest"):
         print('[Step ' + str(langint + 1) + '/3 (Lang:' + langname + ')]')
         if flag == 1: await msg.edit(content='MLG Database Loading... \nStep ' + str(langint + 1) + '/3 (Lang:' + langname + ')')
 
-        pickup_img[langint] = info[mlgver]["gachaImageUrl"][langname]
-        pickup_name[langint] = info[mlgver]["gachaName"][langname]
+        pickup_img[langint] = info["gachaImageUrl"][langname]
+        pickup_name[langint] = info["gachaName"][langname]
         
         mlg_all[langint] = reader[langname]
-        if not len(info[mlgver]["activeIDs"][langname]) == 0:
-            pickup_id[langint] = info[mlgver]["activeIDs"][langname]
+        if not len(info["activeIDs"][langname]) == 0:
+            pickup_id[langint] = info["activeIDs"][langname]
             for row in reader[langname]:
-                if row["id"] in info[mlgver]["activeIDs"][langname]:
+                if row["id"] in info["activeIDs"][langname]:
                     mlg_data[langint].append(row)
                     count[row["rarity"]] += 1
         else:
-            pickup_id[langint] = info[mlgver]["pickupIDs"][langname]
+            pickup_id[langint] = info["pickupIDs"][langname]
             for row in reader[langname]:
+                if info["lastIDs"][langname] == row["id"]:
+                    break
+                
                 if not row["limited"]:
                     mlg_data[langint].append(row)
                     count[row["rarity"]] += 1
                 elif row["limited"] and row["id"] in pickup_id[langint]:
                     mlg_data[langint].append(row)
                     count[row["rarity"]] += 1
-                elif row["rarity"] == 3 and info[mlgver]["fes"][langname]:
+                elif row["rarity"] == 3 and info["fes"][langname]:
                     mlg_data[langint].append(row)
                     count[row["rarity"]] += 1
 
