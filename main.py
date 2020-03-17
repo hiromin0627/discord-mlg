@@ -44,6 +44,7 @@ client = discord.Client()
 mlg_all = [[],[],[]]
 mlg_data = [[],[],[]]
 pickup_id = [[],[],[]]
+gacha_mode = ['','','']
 
 pickup_name = ['','','']
 pickup_img = ['','','']
@@ -79,6 +80,7 @@ async def on_message(message):
             '10を後ろに付け加えると、10連ガシャになります。jp（日本語版）、cn（中国語繁体字版）、kr（韓国語版）を後ろに付け加えると、その言語のガシャが引くことができます。')
         
     if message.content.startswith(prefix):
+        global version
         if not aftermsgdel == 'false':
             if "reload" in message.content or "update" in message.content or "update" in message.content or "cards" in message.content or "reset" in message.content or "pickup" in message.content or "call" in message.content or "ガシャ" in message.content or "gacha" in message.content or "轉蛋" in message.content or "촬영" in message.content:
                 await message.delete()
@@ -89,8 +91,51 @@ async def on_message(message):
         else:
             langint = langtoint()
 
-        if message.content.startswith(prefix + "update"):
-            global version
+        if message.content.startswith(prefix + "change"):
+            mlgver = message.content.strip(prefix + "change ")
+
+            if await gacha_check_available(mlgver):
+                version = mlgver
+            else:
+                await message.channel.send('該当バージョンが見つかりませんでした。バージョン名を確認してください。（検索バージョン名：' + mlgver + '）')
+                return
+            
+            current = dict()
+            try:
+                with open('./gacha_data/version.json', 'r') as f:
+                    current = json.load(f)
+            except:
+                with open('./gacha_data/version.json', 'w') as f:
+                    pre = {"date": "Data unavailable. Please update mlg data.","dlurl": ""}
+                    json.dump(pre, f)
+                    current = pre
+            
+            msgupdate = await message.channel.send('現在のガシャデータベース：' + current["date"] + '\n見つかったガシャデータベース：' + version + '\nバージョンを入れ替えますか？')
+            await msgupdate.add_reaction('⭕')
+            await msgupdate.add_reaction('❌')
+
+            while True:
+                try:
+                    target_reaction, user = await client.wait_for('reaction_add', timeout=timeout)
+
+                    if target_reaction.emoji == '⭕' and user != msgupdate.author:
+                        await msgupdate.edit(content='入れ替えを開始します。')
+                        await msgupdate.clear_reactions()
+                        ini.set("Data", "Version", version)
+                        ini.write(open('./config.ini', 'w'), 'UTF-8')
+                        with open('./gacha_data/version.json', 'w') as f:
+                            json.dump({"date":version, "dlurl":""}, f)
+                        await gacha_reload(1, message, version)
+                        await msgupdate.edit(content='入れ替えが完了しました。')
+                        return
+                    if target_reaction.emoji == '❌' and user != msgupdate.author:
+                        await msgupdate.edit(content='入れ替えを中止します。')
+                        return
+                except:
+                    await msgupdate.edit(content='コマンドに失敗しました。もう一度やり直してください。')
+                    return
+
+        elif message.content.startswith(prefix + "update"):
             latest = gacha_check_update()
 
             current = dict()
@@ -117,28 +162,28 @@ async def on_message(message):
                 await msgl.add_reaction('❌')
                 flag = 0
 
-                while True:
-                    try:
-                        target_reaction, user = await client.wait_for('reaction_add', timeout=timeout)
+            while True:
+                try:
+                    target_reaction, user = await client.wait_for('reaction_add', timeout=timeout)
 
-                        if target_reaction.emoji == '⭕' and user != msgl.author:
-                            await msgl.edit(content='アップデートを開始します。')
-                            await msgl.clear_reactions()
-                            version = latest["date"]
-                            if flag == 1:
-                                ini.set("Data", "Version", "Latest")
-                                ini.write(open('./config.ini', 'w'), 'UTF-8')
-                            with open('./gacha_data/version.json', 'w') as f:
-                                json.dump(latest, f)
-                            await gacha_reload(1, message)
-                            await msgl.edit(content='アップデートが完了しました。')
-                            return
-                        if target_reaction.emoji == '❌' and user != msgl.author:
-                            await msgl.edit(content='アップデートを中止します。')
-                            return
-                    except:
-                        await msgl.edit(content='コマンドに失敗しました。もう一度やり直してください。')
+                    if target_reaction.emoji == '⭕' and user != msgl.author:
+                        await msgl.edit(content='アップデートを開始します。')
+                        await msgl.clear_reactions()
+                        version = latest["date"]
+                        if flag == 1:
+                            ini.set("Data", "Version", "Latest")
+                            ini.write(open('./config.ini', 'w'), 'UTF-8')
+                        with open('./gacha_data/version.json', 'w') as f:
+                            json.dump(latest, f)
+                        await gacha_reload(1, message)
+                        await msgl.edit(content='アップデートが完了しました。')
                         return
+                    if target_reaction.emoji == '❌' and user != msgl.author:
+                        await msgl.edit(content='アップデートを中止します。')
+                        return
+                except:
+                    await msgl.edit(content='コマンドに失敗しました。もう一度やり直してください。')
+                    return
         elif message.content.startswith(prefix + 'cards'):
             print(strtimestamp() + 'Start MLGacha[cards].')
             await gacha_note(message,langint)
@@ -164,6 +209,9 @@ async def on_message(message):
             if voicecheck():
                 await message.channel.send(_('他のユーザーがプレイ中です。終了までお待ちください。'))
                 return
+            elif gacha_mode[langint] == "skip":
+                await message.channel.send('ガシャデータがありません。現在使われているバージョンにてこの言語のガシャ情報がありません。')
+                return
 
             gacha_count = int()
 
@@ -174,7 +222,7 @@ async def on_message(message):
                 with open('./gacha_count/' + langnamelist[langint] + str(message.author.id) + '.txt', 'w') as f:
                     f.write('0')
 
-            if gacha_count >= 300:
+            if gacha_count >= 300 and (gacha_mode[langint] == "normal" or gacha_mode[langint] == "fes"):
                 await gacha_prepare_select(message,langint)
             else:
                 await gacha_prepare(message,langint,gacha_count)
@@ -268,16 +316,14 @@ async def gacha_prepare(message,langint,gacha_count):
     except:
         vc_id = None
 
-    result = []
     role = 0
-    ssr_rate = 9700
-    pick_rate = 99
 
-    if pickup_name[langint] == 'ミリオンフェス' or pickup_name[langint] == '百萬祭典' or pickup_name[langint] == '밀리언 페스티벌':
-        ssr_rate = 9400
-        pick_rate = 198
-
-    if '10' in message.content or '１０' in message.content:
+    if gacha_mode[langint] == "normal" or gacha_mode[langint] == "fes":
+        if '10' in message.content or '１０' in message.content:
+            role = 10
+        else:
+            role = 1
+    elif gacha_mode[langint] == "party":
         role = 10
     else:
         role = 1
@@ -289,70 +335,7 @@ async def gacha_prepare(message,langint,gacha_count):
     except:
         print(strtimestamp() + '[ERROR]Failed to count.')
 
-    rpick = list()
-    rcard = list()
-    srpick = list()
-    srcard = list()
-    ssrpick = list()
-    ssrcard = list()
-
-    for row in mlg_data[langint]:
-        if row["rarity"] == 0 and row["id"] in pickup_id[langint]:
-            rpick.append(row)
-        elif row["rarity"] == 0 and not row["id"] in pickup_id[langint]:
-            rcard.append(row)
-        elif row["rarity"] == 1 and row["id"] in pickup_id[langint]:
-            srpick.append(row)
-        elif row["rarity"] == 1 and not row["id"] in pickup_id[langint]:
-            srcard.append(row)
-        elif row["rarity"] >= 2 and row["id"] in pickup_id[langint]:
-            ssrpick.append(row)
-        elif row["rarity"] >= 2 and not row["id"] in pickup_id[langint]:
-            ssrcard.append(row)
-
-    if len(rpick) == 0: rpick = rcard
-    if len(srpick) == 0: srpick = srcard
-    
-    for n in range(role):
-        if n < 9:
-            rand = random.randint(0, 9999)
-            if rand >= 0 and rand < 850:
-                if len(rpick) > 1:
-                    result.append(rpick[random.randrange(len(rpick) - 1)])
-                else:
-                    result.append(rpick[0])
-            elif rand >= 850 and rand < 8500:
-                result.append(rpick[random.randrange(len(rpick) - 1)])
-            elif rand >= 8500 and rand <= 8740:
-                if len(srpick) > 1:
-                    result.append(srpick[random.randrange(len(srpick) - 1)])
-                else:
-                    result.append(srpick[0])
-            elif rand >= 8740 and rand < ssr_rate:
-                result.append(srcard[random.randrange(len(srcard) - 1)])
-            elif rand >= ssr_rate and rand <= ssr_rate + pick_rate:
-                if len(ssrpick) > 1:
-                    result.append(ssrpick[random.randrange(len(ssrpick) - 1)])
-                else:
-                    result.append(ssrpick[0])
-            elif rand >= ssr_rate + pick_rate:
-                result.append(ssrcard[random.randrange(len(ssrcard) - 1)])
-        elif n == 9:
-            rand = random.randint(0, 9999)
-            if rand >= 0 and rand <= 240:
-                if len(srpick) > 1:
-                    result.append(srpick[random.randrange(len(srpick) - 1)])
-                else:
-                    result.append(srpick[0])
-            elif rand >= 240 and rand <= ssr_rate:
-                result.append(srcard[random.randrange(len(srcard) - 1)])
-            elif rand >= ssr_rate and rand <= ssr_rate + pick_rate:
-                if len(mlg_data[langint][5]) > 1:
-                    result.append(ssrpick[random.randrange(len(ssrpick) - 1)])
-                else:
-                    result.append(ssrpick[0])
-            elif rand >= ssr_rate + pick_rate:
-                result.append(ssrcard[random.randrange(len(ssrcard) - 1)])
+    result = await gacha_emission(langint,role)
 
     print(strtimestamp() + 'Start MLGacha[' + pickup_name[langint] + '] by ' + message.author.name + '.')
 
@@ -414,6 +397,126 @@ async def gacha_prepare(message,langint,gacha_count):
             botmsg = await toBot.send('ML' + str(vc_id))
 
     await mlg_touch(message,result,pickup_name[langint],vc,botmsg,langint)
+
+async def gacha_emission(langint,role):
+    #慣れてないのでメモ
+    #gachaMode = [normal,fes,party,final,special,skip]
+    result = []
+    ssr_rate = 9700
+    pick_rate = 99
+
+    if gacha_mode[langint] == "fes":
+        ssr_rate = 9400
+        pick_rate = 198
+
+    if gacha_mode[langint] == "normal" or gacha_mode[langint] == "fes" or gacha_mode[langint] == "party":
+        rpick = list()
+        rcard = list()
+        srpick = list()
+        srcard = list()
+        ssrpick = list()
+        ssrcard = list()
+
+        for row in mlg_data[langint]:
+            if row["rarity"] == 0 and row["id"] in pickup_id[langint]:
+                rpick.append(row)
+            elif row["rarity"] == 0 and not row["id"] in pickup_id[langint]:
+                rcard.append(row)
+            elif row["rarity"] == 1 and row["id"] in pickup_id[langint]:
+                srpick.append(row)
+            elif row["rarity"] == 1 and not row["id"] in pickup_id[langint]:
+                srcard.append(row)
+            elif row["rarity"] >= 2 and row["id"] in pickup_id[langint]:
+                ssrpick.append(row)
+            elif row["rarity"] >= 2 and not row["id"] in pickup_id[langint]:
+                ssrcard.append(row)
+
+        if len(rpick) == 0: rpick = rcard
+        if len(srpick) == 0: srpick = srcard
+    
+        for n in range(role):
+            if n < 9:
+                rand = random.randint(0, 9999)
+                if rand >= 0 and rand < 850:
+                    if len(rpick) > 1:
+                        result.append(rpick[random.randrange(len(rpick) - 1)])
+                    else:
+                        result.append(rpick[0])
+                elif rand >= 850 and rand < 8500:
+                    result.append(rpick[random.randrange(len(rpick) - 1)])
+                elif rand >= 8500 and rand <= 8740:
+                    if len(srpick) > 1:
+                        result.append(srpick[random.randrange(len(srpick) - 1)])
+                    else:
+                        result.append(srpick[0])
+                elif rand >= 8740 and rand < ssr_rate:
+                    result.append(srcard[random.randrange(len(srcard) - 1)])
+                elif rand >= ssr_rate and rand <= ssr_rate + pick_rate:
+                    if len(ssrpick) > 1:
+                        result.append(ssrpick[random.randrange(len(ssrpick) - 1)])
+                    else:
+                        result.append(ssrpick[0])
+                elif rand >= ssr_rate + pick_rate:
+                    result.append(ssrcard[random.randrange(len(ssrcard) - 1)])
+            elif n == 9:
+                rand = random.randint(0, 9999)
+                if rand >= 0 and rand <= 240:
+                    if len(srpick) > 1:
+                        result.append(srpick[random.randrange(len(srpick) - 1)])
+                    else:
+                        result.append(srpick[0])
+                elif rand >= 240 and rand <= ssr_rate:
+                    result.append(srcard[random.randrange(len(srcard) - 1)])
+                elif rand >= ssr_rate and rand <= ssr_rate + pick_rate:
+                    if len(ssrpick) > 1:
+                        result.append(ssrpick[random.randrange(len(ssrpick) - 1)])
+                    else:
+                        result.append(ssrpick[0])
+                elif rand >= ssr_rate + pick_rate:
+                    result.append(ssrcard[random.randrange(len(ssrcard) - 1)])
+    elif gacha_mode[langint] == "final":
+        result.append(mlg_data[langint][random.randrange(len(mlg_data[langint]) - 1)])
+    elif gacha_mode[langint] == "special":
+        rcard = list()
+        srcard = list()
+        ssrcard = list()
+        limcard = list()
+
+        for row in mlg_data[langint]:
+            if row["rarity"] == 0:
+                rcard.append(row)
+            elif row["rarity"] == 1:
+                srcard.append(row)
+            elif row["rarity"] >= 2 and not row["limited"]:
+                ssrcard.append(row)
+            elif row["rarity"] >= 2 and row["limited"]:
+                ssrcard.append(row)
+                limcard.append(row)
+
+        if len(rcard) == 0: rcard = srcard
+        if len(srcard) == 0: srcard = ssrcard
+    
+        for n in range(10):
+            if n < 9:
+                rand = random.randint(0, 9999)
+                if rand >= 0 and rand < 8500:
+                    if len(rcard) > 1:
+                        result.append(rcard[random.randrange(len(rcard) - 1)])
+                    else:
+                        result.append(rcard[0])
+                elif rand >= 8500 and rand <= 9700:
+                    if len(srcard) > 1:
+                        result.append(srcard[random.randrange(len(srcard) - 1)])
+                    else:
+                        result.append(srcard[0])
+                elif rand >= 9700 and rand <= 9999:
+                    if len(ssrcard) > 1:
+                        result.append(ssrcard[random.randrange(len(ssrcard) - 1)])
+                    else:
+                        result.append(ssrcard[0])
+            elif n == 9:
+                result.append(limcard[random.randrange(len(limcard) - 1)])
+    return result
 
 async def gacha_call(message,langint):
     char_list = list()
@@ -484,14 +587,22 @@ def gacha_check_update():
     data = json.loads(response)
     return data
 
+async def gacha_check_available(mlgver):
+    response = request.urlopen('https://data.hiromin.xyz/gachadata/'+mlgver)
+    if response.getcode() == 200:
+        return True
+    else:
+        return False
+
 async def gacha_reload(flag,message,version="Latest"):
-    global mlg_all, mlg_data, pickup_id
+    global mlg_all, mlg_data, pickup_id, gacha_mode
     print(strtimestamp() + '----------[MLG ' + mlgbotver + ' MLreload]----------')
     if flag == 1: msg = await message.channel.send('MLreload Start.')
     
     mlg_all = [[],[],[]]
     mlg_data = [[],[],[]]
     pickup_id = [[],[],[]]
+    gacha_mode = ['','','']
     name = ['','','']
     print(strtimestamp() + 'MLG temporary data cleaned.')
     if flag == 1: await msg.edit(content='MLG temporary data cleaned.')
@@ -526,34 +637,56 @@ async def gacha_reload(flag,message,version="Latest"):
 
     for langint,langname in enumerate(langnamelist):
         count = [0,0,0,0]
-        print('[Step ' + str(langint + 1) + '/3 (Lang:' + langname + ')]')
-        if flag == 1: await msg.edit(content='MLG Database Loading... \nStep ' + str(langint + 1) + '/3 (Lang:' + langname + ')')
+        gacha_mode[langint] = info["gachaMode"][langname]
+        print('[Step ' + str(langint + 1) + '/3 (Lang:' + langname + ', Gacha mode is "' + gacha_mode[langint] + '")]')
+        if flag == 1: await msg.edit(content='MLG Database Loading... \nStep ' + str(langint + 1) + '/3 (Lang:' + langname + ', Gacha mode is "' + gacha_mode[langint] + '")')
 
         pickup_img[langint] = info["gachaImageUrl"][langname]
         pickup_name[langint] = info["gachaName"][langname]
         
         mlg_all[langint] = reader[langname]
-        if not len(info["activeIDs"][langname]) == 0:
-            pickup_id[langint] = info["activeIDs"][langname]
+        
+        #慣れてないのでメモ
+        #gachaMode = [normal,fes,party,final,special,skip]
+        if gacha_mode[langint] == 'skip':
+            #skip   ：スキップする
+            name[langint] = ""
+            continue
+        elif gacha_mode[langint] == 'special' or gacha_mode[langint] == 'final':
+            #final  ：SSR確定ガシャ（pickupIDsで指定したidのSSRカードしか出ない）
+            #special：スペシャルガチャ（pickupIDsで指定したidのカードしか出ない）
+            pickup_id[langint] = info["pickupIDs"][langname]
             for row in reader[langname]:
-                if row["id"] in info["activeIDs"][langname]:
+                if row["id"] in info["pickupIDs"][langname]:
+                    mlg_data[langint].append(row)
+                    count[row["rarity"]] += 1
+
+                if info["lastIDs"][langname] == row["id"]:
+                    break
+        elif gacha_mode[langint] == 'party':
+            #party  ：打ち上げガシャ（pickupIDsで指定したアイドルidのキャラしか出ない）（タイプセレクトもこれで代用）
+            pickup_id[langint] = info["pickupIDs"][langname]
+            for row in reader[langname]:
+                if row["idolNum"] in info["pickupIDs"][langname]:
                     mlg_data[langint].append(row)
                     count[row["rarity"]] += 1
         else:
+            #normal ：通常のガシャ
+            #fes    ：ミリオンフェス（SSR確率が2倍）
             pickup_id[langint] = info["pickupIDs"][langname]
             for row in reader[langname]:
-                if info["lastIDs"][langname] == row["id"]:
-                    break
-                
                 if not row["limited"]:
                     mlg_data[langint].append(row)
                     count[row["rarity"]] += 1
                 elif row["limited"] and row["id"] in pickup_id[langint]:
                     mlg_data[langint].append(row)
                     count[row["rarity"]] += 1
-                elif row["rarity"] == 3 and info["fes"][langname]:
+                elif row["rarity"] == 3 and gacha_mode[langint] == "fes":
                     mlg_data[langint].append(row)
                     count[row["rarity"]] += 1
+
+                if info["lastIDs"][langname] == row["id"]:
+                    break
 
         print('Pickup name is 「' + pickup_name[langint] + '」')
         print('Pickup cards')
@@ -919,10 +1052,13 @@ def voicecheck():
 def pickupcheck(langint):
     global pickup_id
     name = ''
-    for row in mlg_data[langint]:
-        if row["id"] in pickup_id[langint]:
-            lim = _('限定') if row["limited"] == True else ''
-            name += '［' + lim + rarity_str[row["rarity"]] + '］' + row["name"] + ' ' + row["idol"] + ' (CV.' + row["cv"] + ')\n'
+    if gacha_mode[langint] == "special" and gacha_mode[langint] == "party":
+        name = ''
+    else:
+        for row in mlg_data[langint]:
+            if row["id"] in pickup_id[langint]:
+                lim = _('限定') if row["limited"] == True else ''
+                name += '［' + lim + rarity_str[row["rarity"]] + '］' + row["name"] + ' ' + row["idol"] + ' (CV.' + row["cv"] + ')\n'
     print(name)
     return name
 
