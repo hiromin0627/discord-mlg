@@ -1,7 +1,7 @@
 #coding: utf-8
 #created by @hiromin0627
 #MilliShita Gacha v5
-mlgbotver = '5.0.0_beta'
+mlgbotver = '5.0.0'
 
 import glob
 import gettext
@@ -318,7 +318,7 @@ async def gacha_prepare(message,langint,gacha_count):
 
     role = 0
 
-    if gacha_mode[langint] == "normal" or gacha_mode[langint] == "fes":
+    if gacha_mode[langint] == "normal" or gacha_mode[langint] == "fes" or gacha_mode[langint] == "type":
         if '10' in message.content or '１０' in message.content:
             role = 10
         else:
@@ -328,12 +328,13 @@ async def gacha_prepare(message,langint,gacha_count):
     else:
         role = 1
 
-    try:
-        gacha_count += role
-        with open('./gacha_count/' + langnamelist[langint] + str(message.author.id) + '.txt', 'w') as f:
-            f.write(str(gacha_count))
-    except:
-        print(strtimestamp() + '[ERROR]Failed to count.')
+    if gacha_mode[langint] == "normal" or gacha_mode[langint] == "fes":
+        try:
+            gacha_count += role
+            with open('./gacha_count/' + langnamelist[langint] + str(message.author.id) + '.txt', 'w') as f:
+                f.write(str(gacha_count))
+        except:
+            print(strtimestamp() + '[ERROR]Failed to count.')
 
     result = await gacha_emission(langint,role)
 
@@ -400,7 +401,7 @@ async def gacha_prepare(message,langint,gacha_count):
 
 async def gacha_emission(langint,role):
     #慣れてないのでメモ
-    #gachaMode = [normal,fes,party,final,special,skip]
+    #gachaMode = [normal,fes,party,final,special,type,skip]
     result = []
     ssr_rate = 9700
     pick_rate = 99
@@ -409,7 +410,7 @@ async def gacha_emission(langint,role):
         ssr_rate = 9400
         pick_rate = 198
 
-    if gacha_mode[langint] == "normal" or gacha_mode[langint] == "fes" or gacha_mode[langint] == "party":
+    if gacha_mode[langint] == "normal" or gacha_mode[langint] == "fes":
         rpick = list()
         rcard = list()
         srpick = list()
@@ -476,7 +477,7 @@ async def gacha_emission(langint,role):
                     result.append(ssrcard[random.randrange(len(ssrcard) - 1)])
     elif gacha_mode[langint] == "final":
         result.append(mlg_data[langint][random.randrange(len(mlg_data[langint]) - 1)])
-    elif gacha_mode[langint] == "special":
+    elif gacha_mode[langint] == "party":
         rcard = list()
         srcard = list()
         ssrcard = list()
@@ -492,9 +493,6 @@ async def gacha_emission(langint,role):
             elif row["rarity"] >= 2 and row["limited"]:
                 ssrcard.append(row)
                 limcard.append(row)
-
-        if len(rcard) == 0: rcard = srcard
-        if len(srcard) == 0: srcard = ssrcard
     
         for n in range(10):
             if n < 9:
@@ -516,6 +514,39 @@ async def gacha_emission(langint,role):
                         result.append(ssrcard[0])
             elif n == 9:
                 result.append(limcard[random.randrange(len(limcard) - 1)])
+    elif gacha_mode[langint] == "special":
+        rcard = list()
+        srcard = list()
+        ssrcard = list()
+        limcard = list()
+
+        for row in mlg_data[langint]:
+            if row["rarity"] == 0:
+                rcard.append(row)
+            elif row["rarity"] == 1:
+                srcard.append(row)
+            elif row["rarity"] >= 2:
+                ssrcard.append(row)
+
+        if len(rcard) == 0: rcard = srcard
+        if len(srcard) == 0: srcard = ssrcard
+    
+        rand = random.randint(0, 9999)
+        if rand >= 0 and rand < 8500:
+            if len(rcard) > 1:
+                result.append(rcard[random.randrange(len(rcard) - 1)])
+            else:
+                result.append(rcard[0])
+        elif rand >= 8500 and rand <= 9700:
+            if len(srcard) > 1:
+                result.append(srcard[random.randrange(len(srcard) - 1)])
+            else:
+                result.append(srcard[0])
+        elif rand >= 9700 and rand <= 9999:
+            if len(ssrcard) > 1:
+                result.append(ssrcard[random.randrange(len(ssrcard) - 1)])
+            else:
+                result.append(ssrcard[0])
     return result
 
 async def gacha_call(message,langint):
@@ -625,6 +656,15 @@ async def gacha_reload(flag,message,version="Latest"):
     print(strtimestamp() + 'Using version "' + mlgver + '". Start to load card datas.')
     
     readObj_gachadata = request.urlopen(url+"gachadata/"+mlgver)
+    if not readObj_gachadata.getcode() == 200:
+        print(strtimestamp() + 'Failed to lodad "' + mlgver + '". Change to load latest data.')
+        readObj_latest = request.urlopen(url+"latest")
+        response = readObj_latest.read()
+        data = json.loads(response)
+        mlgver = str(data["date"])
+        with open('./gacha_data/version.json', 'w') as f:
+            json.dump(data, f)
+        readObj_gachadata = request.urlopen(url+"gachadata/"+mlgver)
     response_gachadata = readObj_gachadata.read()
     info = json.loads(response_gachadata)
 
@@ -663,8 +703,9 @@ async def gacha_reload(flag,message,version="Latest"):
 
                 if info["lastIDs"][langname] == row["id"]:
                     break
-        elif gacha_mode[langint] == 'party':
-            #party  ：打ち上げガシャ（pickupIDsで指定したアイドルidのキャラしか出ない）（タイプセレクトもこれで代用）
+        elif gacha_mode[langint] == 'party' or gacha_mode[langint] == 'type':
+            #party  ：打ち上げガシャ（pickupIDsで指定したアイドルidのキャラしか出ない）（3回目のガシャ仕様）
+            #type   ：タイプガシャ（pickupIDsで指定したアイドルidのキャラしか出ない）
             pickup_id[langint] = info["pickupIDs"][langname]
             for row in reader[langname]:
                 if row["idolNum"] in info["pickupIDs"][langname]:
@@ -688,21 +729,36 @@ async def gacha_reload(flag,message,version="Latest"):
                 if info["lastIDs"][langname] == row["id"]:
                     break
 
-        print('Pickup name is 「' + pickup_name[langint] + '」')
-        print('Pickup cards')
-        for row in mlg_data[langint]:
-            if row["id"] in pickup_id[langint]:
-                lim = _('限定') if row["limited"] == True else ''
-                print('[' + lim + rarity_str[row["rarity"]] + ']' + row["name"] + ' ' + row["idol"] + ' (CV.' + row["cv"] + ')')
-                name[langint] += '［' + lim + rarity_str[row["rarity"]] + '］' + row["name"] + ' ' + row["idol"] + ' (CV.' + row["cv"] + ')\n'
+        print('Gacha name is 「' + pickup_name[langint] + '」')
+
+        if gacha_mode[langint] == 'party': name[langint] = '**```打ち上げガチャ3回目の仕様です。10枚目は期間限定SSRが確定で排出されます。以下のアイドルのみ排出されます。```**\n'
+        elif gacha_mode[langint] == 'special' or gacha_mode[langint] == 'final': name[langint] = '**```以下のカードのみ排出されます。```**\n'
+        elif gacha_mode[langint] == 'fes': name[langint] = '**```ミリオンフェス開催中！！SSR排出率が通常の2倍！```**\n'
+
+        if gacha_mode[langint] == 'party' or gacha_mode[langint] == 'type':
+            print('Pickup idols')
+            idollist = []
+            for row in mlg_data[langint]:
+                idollist.append(row["idol"])
+            idollist_set = set(idollist)
+            for row in idollist_set:
+                print(row)
+                name[langint] += row + '・'
+        else:
+            print('Pickup cards')
+            for row in mlg_data[langint]:
+                if row["id"] in pickup_id[langint]:
+                    lim = _('限定') if row["limited"] == True else ''
+                    print('[' + lim + rarity_str[row["rarity"]] + ']' + row["name"] + ' ' + row["idol"] + ' (CV.' + row["cv"] + ')')
+                    name[langint] += '［' + lim + rarity_str[row["rarity"]] + '］' + row["name"] + ' ' + row["idol"] + ' (CV.' + row["cv"] + ')\n'
         print('Actived ' + str(len(mlg_data[langint])) + ' cards.([FES]' + str(count[3]) + ', [SSR]' + str(count[2]) + ', [SR]' + str(count[1]) + ', [R]' + str(count[0]) + ')')
 
     print('Loaded cards. (Japanese:' + str(len(mlg_all[0])) + ', Korea:' + str(len(mlg_all[1])) + ', China:' + str(len(mlg_all[2])) + ')')
     
     emb = discord.Embed(title='Pickup Cards')
-    emb.add_field(name='Japanese:' + pickup_name[0], value=name[0])
-    emb.add_field(name='Korean:' + pickup_name[1], value=name[1])
-    emb.add_field(name='Chinese:' + pickup_name[2], value=name[2])
+    if not gacha_mode[0] == 'skip': emb.add_field(name='Japanese:' + pickup_name[0], value=name[0])
+    if not gacha_mode[1] == 'skip': emb.add_field(name='Korean:' + pickup_name[1], value=name[1])
+    if not gacha_mode[2] == 'skip': emb.add_field(name='Chinese:' + pickup_name[2], value=name[2])
 
     if flag == 1: await msg.edit(content='All MLreload process completed successfully.', embed=emb)
 
@@ -1052,8 +1108,18 @@ def voicecheck():
 def pickupcheck(langint):
     global pickup_id
     name = ''
-    if gacha_mode[langint] == "special" and gacha_mode[langint] == "party":
-        name = ''
+    if gacha_mode[langint] == 'party': name = '**```打ち上げガチャ3回目の仕様です。10枚目は期間限定SSRが確定で排出されます。```**\n'
+    elif gacha_mode[langint] == 'special' or gacha_mode[langint] == 'final': name = '**```以下のカードのみ排出されます。```**\n'
+    elif gacha_mode[langint] == 'fes': name = '**```ミリオンフェス開催中！！SSR排出率が通常の2倍！```**\n'
+
+    if gacha_mode[langint] == 'party' or gacha_mode[langint] == 'type':
+        print('Pickup idols')
+        idollist = []
+        for row in mlg_data[langint]:
+            idollist.append(row["idol"])
+        idollist_set = set(idollist)
+        for row in idollist_set:
+            name += row + '・'
     else:
         for row in mlg_data[langint]:
             if row["id"] in pickup_id[langint]:
