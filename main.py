@@ -45,6 +45,7 @@ mlg_all = [[],[],[]]
 mlg_data = [[],[],[]]
 pickup_id = [[],[],[]]
 gacha_mode = ['','','']
+current_ver = ''
 
 pickup_name = ['','','']
 pickup_img = ['','','']
@@ -216,10 +217,10 @@ async def on_message(message):
             gacha_count = int()
 
             try:
-                with open('./gacha_count/' + pickup_name[langint] + '_' + langnamelist[langint] + str(message.author.id) + '.txt', 'r') as f:
+                with open('./gacha_count/' + pickup_name[langint] + '_' + current_ver + '_' + str(message.author.id) + '.txt', 'r') as f:
                     gacha_count = int(f.read())
             except:
-                with open('./gacha_count/' + pickup_name[langint] + '_' + langnamelist[langint] + str(message.author.id) + '.txt', 'w') as f:
+                with open('./gacha_count/' + pickup_name[langint] + '_' + current_ver + '_' + str(message.author.id) + '.txt', 'w') as f:
                     f.write('0')
 
             if gacha_count >= 300 and (gacha_mode[langint] == "normal" or gacha_mode[langint] == "fes"):
@@ -273,7 +274,7 @@ async def gacha_prepare_select(message,langint):
     print(strtimestamp() + 'Start MLChange[' + kind + '] by ' + str(message.author.id) + '.')
     
     try:
-        with open('./gacha_count/' + pickup_name[langint] + '_' + langnamelist[langint] + str(message.author.id) + '.txt', 'w') as f:
+        with open('./gacha_count/' + pickup_name[langint] + '_' + current_ver + '_' + str(message.author.id) + '.txt', 'w') as f:
             f.write(str(0))
     except:
         print(strtimestamp() + '[ERROR]Gacha count FAILED.')
@@ -331,7 +332,7 @@ async def gacha_prepare(message,langint,gacha_count):
     if gacha_mode[langint] == "normal" or gacha_mode[langint] == "fes":
         try:
             gacha_count += role
-            with open('./gacha_count/' + pickup_name[langint] + '_' + langnamelist[langint] + str(message.author.id) + '.txt', 'w') as f:
+            with open('./gacha_count/' + pickup_name[langint] + '_' + current_ver + '_' + str(message.author.id) + '.txt', 'w') as f:
                 f.write(str(gacha_count))
         except:
             print(strtimestamp() + '[ERROR]Failed to count.')
@@ -626,7 +627,7 @@ async def gacha_check_available(mlgver):
         return False
 
 async def gacha_reload(flag,message,version="Latest"):
-    global mlg_all, mlg_data, pickup_id, gacha_mode
+    global mlg_all, mlg_data, pickup_id, gacha_mode, current_ver
     print(strtimestamp() + '----------[MLG ' + mlgbotver + ' MLreload]----------')
     if flag == 1: msg = await message.channel.send('MLreload Start.')
     
@@ -667,6 +668,7 @@ async def gacha_reload(flag,message,version="Latest"):
         readObj_gachadata = request.urlopen(url+"gachadata/"+mlgver)
     response_gachadata = readObj_gachadata.read()
     info = json.loads(response_gachadata)
+    current_ver = mlgver
 
     for langint,langname in enumerate(langnamelist):
         pickup_id[langint] = info["pickupIDs"][langname]
@@ -804,7 +806,7 @@ async def gacha_note(message,langint):
 
     gacha_count = str()
     try:
-        with open('./gacha_count/' + pickup_name[langint] + '_' + langnamelist[langint] + str(message.author.id) + '.txt', 'r') as f:
+        with open('./gacha_count/' + pickup_name[langint] + '_' + current_ver + '_' + str(message.author.id) + '.txt', 'r') as f:
             gacha_count = f.read()
     except:
         gacha_count = '0'
@@ -995,7 +997,7 @@ async def mlg_touch(message,result,kind,vc,botmsg,langint):
 
                         gacha_count = str()
                         try:
-                            with open('./gacha_count/' + pickup_name[langint] + '_' + langnamelist[langint] + str(message.author.id) + '.txt', 'r') as f:
+                            with open('./gacha_count/' + pickup_name[langint] + '_' + current_ver + '_' + str(message.author.id) + '.txt', 'r') as f:
                                 gacha_count = f.read()
                         except:
                             print(strtimestamp() + '[ERROR]Gacha count read FAILED.')
@@ -1075,7 +1077,7 @@ async def mlg_touch(message,result,kind,vc,botmsg,langint):
 
                     gacha_count = str()
                     try:
-                        with open('./gacha_count/' + pickup_name[langint] + '_' + langnamelist[langint] + str(message.author.id) + '.txt', 'r') as f:
+                        with open('./gacha_count/' + pickup_name[langint] + '_' + current_ver + '_' + str(message.author.id) + '.txt', 'r') as f:
                             gacha_count = f.read()
                     except:
                         print(strtimestamp() + '[ERROR]Gacha count read FAILED.')
