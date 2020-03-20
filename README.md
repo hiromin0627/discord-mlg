@@ -8,7 +8,9 @@ PythonベースのDiscord用ボットのアイドルマスターミリオンラ�
   - コマンドやConfigで勝手に更新せず、保存されているバージョンでロードするようにできます。
 - 「MLupdate」と打ち込んでいただくと、最新のものをダウンロードすることができます。
 - 「MLchange」で別のバージョンのデータベースを呼び出すこともできます。
-  - バージョン名は[こちら](https://hiromin.xyz/content/discordmlg/databaselist.php)で確認
+  - バージョン名は以下のページで確認してください。
+  - [日本語版](https://hiromin.xyz/content/discordmlg/databaselist.php)
+  - [アジア版（韓国語版・中国語繁体字版）](https://hiromin.xyz/content/discordmlg/databaselist-asia.php)
   
 ## 詳しい情報
 [こちら](https://hiromin.xyz/content/discordmlg/)のページで解説をしています。ご確認ください。  
@@ -24,6 +26,7 @@ PythonベースのDiscord用ボットのアイドルマスターミリオンラ�
 1. main.pyをPythonで起動します（Windowsだったらrun.batファイルを使用できます）。
     - BGMを使用するならば、bgm.pyを起動します（Windowsならrun_bgm.batが使用できます）。
 1. 素敵なガシャライフを！
+[こちらのブログ](https://blog.hiromin.xyz/紹介/859)にて導入方法の解説をしています。
 
 ## 遊び方
 - 「MLガシャ」または「MLgacha」、「ML轉蛋」、「ML촬영」と入力するとミリシタのガシャを引くことができます。  
