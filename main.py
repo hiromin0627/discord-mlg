@@ -1,7 +1,7 @@
 #coding: utf-8
 #created by @hiromin0627
 #MilliShita Gacha v5
-mlgbotver = '5.0.0'
+mlgbotver = '5.1.0'
 
 import glob
 import gettext
@@ -45,7 +45,7 @@ mlg_all = [[],[],[]]
 mlg_data = [[],[],[]]
 pickup_id = [[],[],[]]
 gacha_mode = ['','','']
-current_ver = ''
+current_ver = ['','','']
 
 pickup_name = ['','','']
 pickup_img = ['','','']
@@ -83,7 +83,7 @@ async def on_message(message):
     if message.content.startswith(prefix):
         global version
         if not aftermsgdel == 'false':
-            if "reload" in message.content or "update" in message.content or "update" in message.content or "cards" in message.content or "reset" in message.content or "pickup" in message.content or "call" in message.content or "ガシャ" in message.content or "gacha" in message.content or "轉蛋" in message.content or "촬영" in message.content:
+            if "change" in message.content or "update" in message.content or "uselatest" in message.content or "retention" in message.content or "cards" in message.content or "reset" in message.content or "pickup" in message.content or "call" in message.content or "ガシャ" in message.content or "gacha" in message.content or "轉蛋" in message.content or "촬영" in message.content:
                 await message.delete()
 
         langint = 0
@@ -93,7 +93,11 @@ async def on_message(message):
             langint = langtoint()
 
         if message.content.startswith(prefix + "change"):
-            mlgver = message.content.strip(prefix + "change ")
+            try:
+                mlgver = message.content.split()[1]
+            except IndexError:
+                await message.channel.send('コマンドが間違っています。バージョン名はスペースを空けて入力してください。（例：MLchange 20200101）')
+                return
 
             if await gacha_check_available(mlgver):
                 version = mlgver
@@ -101,19 +105,16 @@ async def on_message(message):
                 await message.channel.send('該当バージョンが見つかりませんでした。バージョン名を確認してください。（検索バージョン名：' + mlgver + '）')
                 return
             
-            current = dict()
-            try:
-                with open('./gacha_data/version.json', 'r') as f:
-                    current = json.load(f)
-            except:
-                with open('./gacha_data/version.json', 'w') as f:
-                    pre = {"date": "Data unavailable. Please update mlg data.","dlurl": ""}
-                    json.dump(pre, f)
-                    current = pre
+            current = await current_version_loader()
             
-            msgupdate = await message.channel.send('現在のガシャデータベース：' + current["date"] + '\n見つかったガシャデータベース：' + version + '\nバージョンを入れ替えますか？')
-            await msgupdate.add_reaction('⭕')
-            await msgupdate.add_reaction('❌')
+            if ini['Data']['Version'] == 'Latest':
+                msgupdate = await message.channel.send('**現在のガシャデータベース**\n日本語版：' + current["version"][0] + '　アジア版：' + current["version"][1] + '\n**見つかったガシャデータベース**\n' + mlgver + '\n**ローカルバージョンを維持する設定に変更**し、バージョンを入れ替えますか？')
+                await msgupdate.add_reaction('⭕')
+                await msgupdate.add_reaction('❌')
+            else:
+                msgupdate = await message.channel.send('**現在のガシャデータベース**\n日本語版：' + current["version"][0] + '　アジア版：' + current["version"][1] + '\n**見つかったガシャデータベース**\n' + mlgver + '\nバージョンを入れ替えますか？')
+                await msgupdate.add_reaction('⭕')
+                await msgupdate.add_reaction('❌')
 
             while True:
                 try:
@@ -122,11 +123,9 @@ async def on_message(message):
                     if target_reaction.emoji == '⭕' and user != msgupdate.author:
                         await msgupdate.edit(content='入れ替えを開始します。')
                         await msgupdate.clear_reactions()
-                        ini.set("Data", "Version", version)
+                        ini.set("Data","Version","Retention")
                         ini.write(open('./config.ini', 'w'), 'UTF-8')
-                        with open('./gacha_data/version.json', 'w') as f:
-                            json.dump({"date":version, "dlurl":""}, f)
-                        await gacha_reload(1, message, version)
+                        await gacha_reload(1, message, mlgver)
                         await msgupdate.edit(content='入れ替えが完了しました。')
                         return
                     if target_reaction.emoji == '❌' and user != msgupdate.author:
@@ -135,33 +134,26 @@ async def on_message(message):
                 except:
                     await msgupdate.edit(content='コマンドに失敗しました。もう一度やり直してください。')
                     return
-
+        elif message.content.startswith(prefix + "uselatest"):
+            ini.set("Data","Version","Latest")
+            ini.write(open('./config.ini', 'w'), 'UTF-8')
+            await message.channel.send('起動時に最新版をロードするように設定されました。')
+        elif message.content.startswith(prefix + "retention"):
+            ini.set("Data","Version","Retention")
+            ini.write(open('./config.ini', 'w'), 'UTF-8')
+            await message.channel.send('起動時に保存されているバージョンでロードするように設定されました。')
         elif message.content.startswith(prefix + "update"):
             latest = gacha_check_update()
 
-            current = dict()
-            try:
-                with open('./gacha_data/version.json', 'r') as f:
-                    current = json.load(f)
-            except:
-                with open('./gacha_data/version.json', 'w') as f:
-                    pre = {"date": "Data unavailable. Please update mlg data.","dlurl": ""}
-                    json.dump(pre, f)
-                    current = pre
+            current = await current_version_loader()
 
-            if latest["date"] == current["date"]:
+            if latest["version"] == current["version"]:
                 msgl = await message.channel.send('現在のガシャデータベースは最新のものが使われています。')
                 return
-            elif not version == "Latest":
-                msgl = await message.channel.send('バージョンが設定ファイルで指定されています。最新のガシャデータベース：' + latest["date"] + '\n現在のガシャデータベース：' + current["date"] + '\n設定を「Latest」に上書きしてアップデートしますか？')
-                await msgl.add_reaction('⭕')
-                await msgl.add_reaction('❌')
-                flag = 1
             else:
-                msgl = await message.channel.send('最新のガシャデータベース：' + latest["date"] + '\n現在のガシャデータベース：' + current["date"] + '\nアップデートしますか？')
+                msgl = await message.channel.send('**最新のガシャデータベース**\n日本語版：' + latest["version"][0] + '　アジア版：' + latest["version"][1] + '\n**現在のガシャデータベース**\n日本語版：' + current["version"][0] + '　アジア版：' + current["version"][1] + '\nアップデートしますか？')
                 await msgl.add_reaction('⭕')
                 await msgl.add_reaction('❌')
-                flag = 0
 
             while True:
                 try:
@@ -170,12 +162,7 @@ async def on_message(message):
                     if target_reaction.emoji == '⭕' and user != msgl.author:
                         await msgl.edit(content='アップデートを開始します。')
                         await msgl.clear_reactions()
-                        version = latest["date"]
-                        if flag == 1:
-                            ini.set("Data", "Version", "Latest")
-                            ini.write(open('./config.ini', 'w'), 'UTF-8')
-                        with open('./gacha_data/version.json', 'w') as f:
-                            json.dump(latest, f)
+                        version = latest["version"]
                         await gacha_reload(1, message)
                         await msgl.edit(content='アップデートが完了しました。')
                         return
@@ -217,10 +204,10 @@ async def on_message(message):
             gacha_count = int()
 
             try:
-                with open('./gacha_count/' + pickup_name[langint] + '_' + current_ver + '_' + str(message.author.id) + '.txt', 'r') as f:
+                with open('./gacha_count/' + current_ver[langint] + '_' + str(message.author.id) + '.txt', 'r') as f:
                     gacha_count = int(f.read())
             except:
-                with open('./gacha_count/' + pickup_name[langint] + '_' + current_ver + '_' + str(message.author.id) + '.txt', 'w') as f:
+                with open('./gacha_count/' + current_ver[langint] + '_' + str(message.author.id) + '.txt', 'w') as f:
                     f.write('0')
 
             if gacha_count >= 300 and (gacha_mode[langint] == "normal" or gacha_mode[langint] == "fes"):
@@ -274,7 +261,7 @@ async def gacha_prepare_select(message,langint):
     print(strtimestamp() + 'Start MLChange[' + kind + '] by ' + str(message.author.id) + '.')
     
     try:
-        with open('./gacha_count/' + pickup_name[langint] + '_' + current_ver + '_' + str(message.author.id) + '.txt', 'w') as f:
+        with open('./gacha_count/' + current_ver[langint] + '_' + str(message.author.id) + '.txt', 'w') as f:
             f.write(str(0))
     except:
         print(strtimestamp() + '[ERROR]Gacha count FAILED.')
@@ -332,7 +319,7 @@ async def gacha_prepare(message,langint,gacha_count):
     if gacha_mode[langint] == "normal" or gacha_mode[langint] == "fes":
         try:
             gacha_count += role
-            with open('./gacha_count/' + pickup_name[langint] + '_' + current_ver + '_' + str(message.author.id) + '.txt', 'w') as f:
+            with open('./gacha_count/' + current_ver[langint] + '_' + str(message.author.id) + '.txt', 'w') as f:
                 f.write(str(gacha_count))
         except:
             print(strtimestamp() + '[ERROR]Failed to count.')
@@ -445,7 +432,7 @@ async def gacha_emission(langint,role):
                     else:
                         result.append(rpick[0])
                 elif rand >= 850 and rand < 8500:
-                    result.append(rpick[random.randrange(len(rpick) - 1)])
+                    result.append(rcard[random.randrange(len(rcard) - 1)])
                 elif rand >= 8500 and rand <= 8740:
                     if len(srpick) > 1:
                         result.append(srpick[random.randrange(len(srpick) - 1)])
@@ -620,11 +607,31 @@ def gacha_check_update():
     return data
 
 async def gacha_check_available(mlgver):
-    response = request.urlopen('https://data.hiromin.xyz/gachadata/'+mlgver)
-    if response.getcode() == 200:
-        return True
-    else:
+    try:
+        response = request.urlopen('https://data.hiromin.xyz/gachadata/'+mlgver)
+        if response.getcode() == 200:
+            return True
+        else:
+            return False
+    except:
         return False
+
+async def current_version_loader():
+    current = dict()
+    try:
+        with open('./gacha_data/version.json', 'r') as f:
+            current = json.load(f)
+        if "version" not in current:
+            with open('./gacha_data/version.json', 'w') as f:
+                pre = {"version": ["Nodata","Nodata"]}
+                json.dump(pre, f)
+                current = pre
+    except:
+        with open('./gacha_data/version.json', 'w') as f:
+            pre = {"version": ["Nodata","Nodata"]}
+            json.dump(pre, f)
+            current = pre
+    return current
 
 async def gacha_reload(flag,message,version="Latest"):
     global mlg_all, mlg_data, pickup_id, gacha_mode, current_ver
@@ -641,37 +648,42 @@ async def gacha_reload(flag,message,version="Latest"):
 
     url = "https://data.hiromin.xyz/"
 
-    if version == "Latest":
+    current = await current_version_loader()
+    if version == "Retention":
+        mlgver = current["version"]
+    elif version == "Latest":
         readObj_latest = request.urlopen(url+"latest")
         response = readObj_latest.read()
         data = json.loads(response)
-        mlgver = str(data["date"])
+        mlgver = data["version"]
         with open('./gacha_data/version.json', 'w') as f:
             json.dump(data, f)
     else:
-        data = {"date": version}
-        mlgver = version
-        with open('./gacha_data/version.json', 'w') as f:
-            json.dump(data, f)
+        try:
+            if "ja" in version:
+                mlgver = [version,current["version"][1]]
+                with open('./gacha_data/version.json', 'w') as f:
+                    json.dump({"version":[version,current["version"][1]]}, f)
+            else:
+                mlgver = [current["version"][0],version]
+                with open('./gacha_data/version.json', 'w') as f:
+                    json.dump({"version":[current[0],version]}, f)
+        except:
+            import traceback
+            traceback.print_exc()
 
-    print(strtimestamp() + 'Using version "' + mlgver + '". Start to load card datas.')
+    current_ver = [mlgver[0],mlgver[1],mlgver[1]]
+
+    print(strtimestamp() + 'Using version JP:"' + mlgver[0] + '", ASIA:"' + mlgver[1] + '". Start to load card datas.')
     
-    readObj_gachadata = request.urlopen(url+"gachadata/"+mlgver)
-    if not readObj_gachadata.getcode() == 200:
-        print(strtimestamp() + 'Failed to lodad "' + mlgver + '". Change to load latest data.')
-        readObj_latest = request.urlopen(url+"latest")
-        response = readObj_latest.read()
-        data = json.loads(response)
-        mlgver = str(data["date"])
-        with open('./gacha_data/version.json', 'w') as f:
-            json.dump(data, f)
-        readObj_gachadata = request.urlopen(url+"gachadata/"+mlgver)
-    response_gachadata = readObj_gachadata.read()
-    info = json.loads(response_gachadata)
-    current_ver = mlgver
+    info = list()
+    for row in current_ver:
+        readObj_gachadata = request.urlopen(url+"gachadata/"+row)
+        response_gachadata = readObj_gachadata.read()
+        info.append(json.loads(response_gachadata))
 
     for langint,langname in enumerate(langnamelist):
-        pickup_id[langint] = info["pickupIDs"][langname]
+        pickup_id[langint] = info[langint]["pickupIDs"]
     
     readObj_cards = request.urlopen(url+"cards")
     response_cards = readObj_cards.read()
@@ -679,12 +691,16 @@ async def gacha_reload(flag,message,version="Latest"):
 
     for langint,langname in enumerate(langnamelist):
         count = [0,0,0,0]
-        gacha_mode[langint] = info["gachaMode"][langname]
+        gacha_mode[langint] = info[langint]["gachaMode"]
         print('[Step ' + str(langint + 1) + '/3 (Lang:' + langname + ', Gacha mode is "' + gacha_mode[langint] + '")]')
         if flag == 1: await msg.edit(content='MLG Database Loading... \nStep ' + str(langint + 1) + '/3 (Lang:' + langname + ', Gacha mode is "' + gacha_mode[langint] + '")')
 
-        pickup_img[langint] = info["gachaImageUrl"][langname]
-        pickup_name[langint] = info["gachaName"][langname]
+        if langint < 2:
+            pickup_img[langint] = info[langint]["gachaImageUrl"]
+            pickup_name[langint] = info[langint]["gachaName"]
+        else:
+            pickup_img[langint] = info[langint]["gachaImageUrlCN"]
+            pickup_name[langint] = info[langint]["gachaNameCN"]
         
         mlg_all[langint] = reader[langname]
         
@@ -697,26 +713,26 @@ async def gacha_reload(flag,message,version="Latest"):
         elif gacha_mode[langint] == 'special' or gacha_mode[langint] == 'final':
             #final  ：SSR確定ガシャ（pickupIDsで指定したidのSSRカードしか出ない）
             #special：スペシャルガチャ（pickupIDsで指定したidのカードしか出ない）
-            pickup_id[langint] = info["pickupIDs"][langname]
+            pickup_id[langint] = info[langint]["pickupIDs"]
             for row in reader[langname]:
-                if row["id"] in info["pickupIDs"][langname]:
+                if row["id"] in info[langint]["pickupIDs"]:
                     mlg_data[langint].append(row)
                     count[row["rarity"]] += 1
 
-                if info["lastIDs"][langname] == row["id"]:
+                if info[langint]["lastIDs"] == row["id"]:
                     break
         elif gacha_mode[langint] == 'party' or gacha_mode[langint] == 'type':
             #party  ：打ち上げガシャ（pickupIDsで指定したアイドルidのキャラしか出ない）（3回目のガシャ仕様）
             #type   ：タイプガシャ（pickupIDsで指定したアイドルidのキャラしか出ない）
-            pickup_id[langint] = info["pickupIDs"][langname]
+            pickup_id[langint] = info[langint]["pickupIDs"]
             for row in reader[langname]:
-                if row["idolNum"] in info["pickupIDs"][langname]:
+                if row["idolNum"] in info[langint]["pickupIDs"]:
                     mlg_data[langint].append(row)
                     count[row["rarity"]] += 1
         else:
             #normal ：通常のガシャ
             #fes    ：ミリオンフェス（SSR確率が2倍）
-            pickup_id[langint] = info["pickupIDs"][langname]
+            pickup_id[langint] = info[langint]["pickupIDs"]
             for row in reader[langname]:
                 if not row["limited"]:
                     mlg_data[langint].append(row)
@@ -728,7 +744,7 @@ async def gacha_reload(flag,message,version="Latest"):
                     mlg_data[langint].append(row)
                     count[row["rarity"]] += 1
 
-                if info["lastIDs"][langname] == row["id"]:
+                if info[langint]["lastIDs"] == row["id"]:
                     break
 
         print('Gacha name is 「' + pickup_name[langint] + '」')
@@ -761,6 +777,7 @@ async def gacha_reload(flag,message,version="Latest"):
     if not gacha_mode[0] == 'skip': emb.add_field(name='Japanese:' + pickup_name[0], value=name[0])
     if not gacha_mode[1] == 'skip': emb.add_field(name='Korean:' + pickup_name[1], value=name[1])
     if not gacha_mode[2] == 'skip': emb.add_field(name='Chinese:' + pickup_name[2], value=name[2])
+    emb.set_footer(text='Version JA:' + mlgver[0] + ', ASIA:' + mlgver[1])
 
     if flag == 1: await msg.edit(content='All MLreload process completed successfully.', embed=emb)
 
@@ -806,7 +823,7 @@ async def gacha_note(message,langint):
 
     gacha_count = str()
     try:
-        with open('./gacha_count/' + pickup_name[langint] + '_' + current_ver + '_' + str(message.author.id) + '.txt', 'r') as f:
+        with open('./gacha_count/' + current_ver[langint] + '_' + str(message.author.id) + '.txt', 'r') as f:
             gacha_count = f.read()
     except:
         gacha_count = '0'
@@ -997,7 +1014,7 @@ async def mlg_touch(message,result,kind,vc,botmsg,langint):
 
                         gacha_count = str()
                         try:
-                            with open('./gacha_count/' + pickup_name[langint] + '_' + current_ver + '_' + str(message.author.id) + '.txt', 'r') as f:
+                            with open('./gacha_count/' + current_ver[langint] + '_' + str(message.author.id) + '.txt', 'r') as f:
                                 gacha_count = f.read()
                         except:
                             print(strtimestamp() + '[ERROR]Gacha count read FAILED.')
@@ -1077,7 +1094,7 @@ async def mlg_touch(message,result,kind,vc,botmsg,langint):
 
                     gacha_count = str()
                     try:
-                        with open('./gacha_count/' + pickup_name[langint] + '_' + current_ver + '_' + str(message.author.id) + '.txt', 'r') as f:
+                        with open('./gacha_count/' + current_ver[langint] + '_' + str(message.author.id) + '.txt', 'r') as f:
                             gacha_count = f.read()
                     except:
                         print(strtimestamp() + '[ERROR]Gacha count read FAILED.')
