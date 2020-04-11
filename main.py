@@ -398,7 +398,9 @@ async def gacha_emission(langint,role):
         ssr_rate = 9400
         pick_rate = 198
 
-    if gacha_mode[langint] == "normal" or gacha_mode[langint] == "fes":
+    if gacha_mode[langint] == "normal" or gacha_mode[langint] == "fes" or gacha_mode[langint] == "final":
+        if gacha_mode[langint] == "final":
+            role = 10
         rpick = list()
         rcard = list()
         srpick = list()
@@ -424,8 +426,8 @@ async def gacha_emission(langint,role):
         if len(srpick) == 0: srpick = srcard
     
         for n in range(role):
+            rand = random.randint(0, 9999)
             if n < 9:
-                rand = random.randint(0, 9999)
                 if rand >= 0 and rand < 850:
                     if len(rpick) > 1:
                         result.append(rpick[random.randrange(len(rpick) - 1)])
@@ -448,23 +450,23 @@ async def gacha_emission(langint,role):
                 elif rand >= ssr_rate + pick_rate:
                     result.append(ssrcard[random.randrange(len(ssrcard) - 1)])
             elif n == 9:
-                rand = random.randint(0, 9999)
-                if rand >= 0 and rand <= 240:
-                    if len(srpick) > 1:
-                        result.append(srpick[random.randrange(len(srpick) - 1)])
-                    else:
-                        result.append(srpick[0])
-                elif rand >= 240 and rand <= ssr_rate:
-                    result.append(srcard[random.randrange(len(srcard) - 1)])
-                elif rand >= ssr_rate and rand <= ssr_rate + pick_rate:
-                    if len(ssrpick) > 1:
-                        result.append(ssrpick[random.randrange(len(ssrpick) - 1)])
-                    else:
-                        result.append(ssrpick[0])
-                elif rand >= ssr_rate + pick_rate:
-                    result.append(ssrcard[random.randrange(len(ssrcard) - 1)])
-    elif gacha_mode[langint] == "final":
-        result.append(mlg_data[langint][random.randrange(len(mlg_data[langint]) - 1)])
+                if gacha_mode[langint] == "normal" or gacha_mode[langint] == "fes":
+                    if rand >= 0 and rand <= 240:
+                        if len(srpick) > 1:
+                            result.append(srpick[random.randrange(len(srpick) - 1)])
+                        else:
+                            result.append(srpick[0])
+                    elif rand >= 240 and rand <= ssr_rate:
+                        result.append(srcard[random.randrange(len(srcard) - 1)])
+                    elif rand >= ssr_rate and rand <= ssr_rate + pick_rate:
+                        if len(ssrpick) > 1:
+                            result.append(ssrpick[random.randrange(len(ssrpick) - 1)])
+                        else:
+                            result.append(ssrpick[0])
+                    elif rand >= ssr_rate + pick_rate:
+                        result.append(ssrcard[random.randrange(len(ssrcard) - 1)])
+                elif gacha_mode[langint] == "final":
+                    result.append(ssrpick[random.randrange(len(ssrpick) - 1)])
     elif gacha_mode[langint] == "party":
         rcard = list()
         srcard = list()
@@ -711,7 +713,7 @@ async def gacha_reload(flag,message,version="Latest"):
             name[langint] = ""
             continue
         elif gacha_mode[langint] == 'special' or gacha_mode[langint] == 'final':
-            #final  ：SSR確定ガシャ（pickupIDsで指定したidのSSRカードしか出ない）
+            #final  ：SSR確定ガシャ（10連目はpickupIDsで指定したidのSSRカードしか出ない）
             #special：スペシャルガチャ（pickupIDsで指定したidのカードしか出ない）
             pickup_id[langint] = info[langint]["pickupIDs"]
             for row in reader[langname]:
@@ -750,7 +752,8 @@ async def gacha_reload(flag,message,version="Latest"):
         print('Gacha name is 「' + pickup_name[langint] + '」')
 
         if gacha_mode[langint] == 'party': name[langint] = '**```打ち上げガチャ3回目の仕様です。10枚目は期間限定SSRが確定で排出されます。以下のアイドルのみ排出されます。```**\n'
-        elif gacha_mode[langint] == 'special' or gacha_mode[langint] == 'final': name[langint] = '**```以下のカードのみ排出されます。```**\n'
+        elif gacha_mode[langint] == 'special': name[langint] = '**```以下のカードのみ排出されます。```**\n'
+        elif gacha_mode[langint] == 'final': name[langint] = '**```10連目は以下のカードのみ排出されます。```**\n'
         elif gacha_mode[langint] == 'fes': name[langint] = '**```ミリオンフェス開催中！！SSR排出率が通常の2倍！```**\n'
 
         if gacha_mode[langint] == 'party' or gacha_mode[langint] == 'type':
