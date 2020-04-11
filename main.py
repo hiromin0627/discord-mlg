@@ -1,7 +1,7 @@
 #coding: utf-8
 #created by @hiromin0627
 #MilliShita Gacha v5
-mlgbotver = '5.1.0'
+mlgbotver = '5.1.1'
 
 import glob
 import gettext
