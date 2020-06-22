@@ -1,7 +1,7 @@
 #coding: utf-8
 #created by @hiromin0627
 #MilliShita Gacha v5
-mlgbotver = '5.1.1'
+mlgbotver = '5.1.2'
 
 import glob
 import gettext
@@ -561,6 +561,16 @@ async def gacha_call(message,langint):
             if data["idol"] in message.content[6:] and (data["name"] == 'シアターデイズ' or data["name"] == '劇場時光' or data["name"] == '시어터 데이즈'):
                 carddata = data
                 break
+    elif 'MILLION LIVE CLOSET!' in message.content[6:]:
+        for data in mlg_all[langint]:
+            if message.content[6:] in data["idol"] and data["name"] == 'MILLION LIVE CLOSET!':
+                carddata = data
+                break
+    elif 'フォーチュンガール' in message.content[6:]:
+        for data in mlg_all[langint]:
+            if message.content[6:] in data["idol"] and data["name"] == 'フォーチュンガール':
+                carddata = data
+                break
     else:
         for data in mlg_all[langint]:
             if data["name"] in message.content[6:] and char_list[data["id"]] == '1':
@@ -712,8 +722,7 @@ async def gacha_reload(flag,message,version="Latest"):
             #skip   ：スキップする
             name[langint] = ""
             continue
-        elif gacha_mode[langint] == 'special' or gacha_mode[langint] == 'final':
-            #final  ：SSR確定ガシャ（10連目はpickupIDsで指定したidのSSRカードしか出ない）
+        elif gacha_mode[langint] == 'special':
             #special：スペシャルガチャ（pickupIDsで指定したidのカードしか出ない）
             pickup_id[langint] = info[langint]["pickupIDs"]
             for row in reader[langname]:
@@ -732,6 +741,7 @@ async def gacha_reload(flag,message,version="Latest"):
                     mlg_data[langint].append(row)
                     count[row["rarity"]] += 1
         else:
+            #final  ：SSR確定ガシャ（10連目はpickupIDsで指定したidのSSRカードしか出ない）
             #normal ：通常のガシャ
             #fes    ：ミリオンフェス（SSR確率が2倍）
             pickup_id[langint] = info[langint]["pickupIDs"]
